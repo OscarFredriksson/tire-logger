@@ -1,9 +1,11 @@
 export interface Stint {
   stintId: string;
   laps: number;
-  position: string;
+  position?: string;
   trackId: string;
   date: Date;
+
+  tires: { tireId: string; position: string }[];
 
   // Not stored, enriched later
   trackName?: string;
@@ -27,4 +29,8 @@ export interface Track {
 
 export interface Tracks {
   tracks: Track[];
+}
+
+export interface Stints {
+  stints: Stint[];
 }

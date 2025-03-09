@@ -5,15 +5,18 @@ import ReactDOM from 'react-dom/client';
 import { MantineProvider } from '@mantine/core';
 import { App } from './App';
 import { HashRouter, Route, Routes } from 'react-router';
+import { ModalsProvider } from '@mantine/modals';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <MantineProvider defaultColorScheme="dark">
-      <HashRouter>
-        <Routes>
-          <Route path="*" element={<App />} />
-        </Routes>
-      </HashRouter>
+      <ModalsProvider>
+        <HashRouter>
+          <Routes>
+            <Route path="*" element={<App />} />
+          </Routes>
+        </HashRouter>
+      </ModalsProvider>
     </MantineProvider>
   </StrictMode>
 );
