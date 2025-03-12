@@ -20,6 +20,10 @@ const getTrack = (trackId: string): Track | undefined => {
   return tracks[trackId];
 };
 
+const getTracks = (): Track[] => {
+  return Object.values(tracks);
+};
+
 const tires = readTireDataFromFile();
 
 const getTire = (_, tireId: string): Tire | undefined => {
@@ -60,4 +64,4 @@ const getStintData = () => {
   return enrichStintsWithTrackData(data.stints);
 };
 
-export const handlers = [getTireData, saveTireData, getStintData, getTire];
+export const handlers = [getTireData, saveTireData, getStintData, getTire, getTracks];

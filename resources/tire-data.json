@@ -2,6 +2,7 @@
   "tires": [
     {
       "tireId": "1",
+      "name": "Used rear tire 1",
       "stints": [
         {
           "stintId": "1",
@@ -21,6 +22,61 @@
     },
     {
       "tireId": "2",
+      "name": "Used rear tire 2",
+      "stints": [
+        {
+          "stintId": "3",
+          "date": "2025-03-09T17:23:00.000Z",
+          "laps": 7,
+          "position": "Left Front",
+          "trackId": "1"
+        },
+        {
+          "stintId": "4",
+          "date": "2025-03-07T15:13:00.000Z",
+          "laps": 23,
+          "position": "Right Front",
+          "trackId": "2"
+        },
+        {
+          "stintId": "4",
+          "date": "2025-02-28T10:47:00.000Z",
+          "laps": 23,
+          "position": "Right Front",
+          "trackId": "1"
+        }
+      ]
+    },
+    {
+      "tireId": "4",
+      "name": "Used front tire 1",
+      "stints": [
+        {
+          "stintId": "3",
+          "date": "2025-03-09T17:23:00.000Z",
+          "laps": 7,
+          "position": "Left Front",
+          "trackId": "1"
+        },
+        {
+          "stintId": "4",
+          "date": "2025-03-07T15:13:00.000Z",
+          "laps": 23,
+          "position": "Right Front",
+          "trackId": "2"
+        },
+        {
+          "stintId": "4",
+          "date": "2025-02-28T10:47:00.000Z",
+          "laps": 23,
+          "position": "Right Front",
+          "trackId": "1"
+        }
+      ]
+    },
+    {
+      "tireId": "3",
+      "name": "Used front tire 2",
       "stints": [
         {
           "stintId": "3",

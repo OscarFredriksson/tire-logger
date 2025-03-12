@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
-import { Stint, Tire } from '@shared/model';
+import { Stint, Tire, Track } from '@shared/model';
 
 declare global {
   interface Window {
@@ -8,6 +8,7 @@ declare global {
       getTireData: () => Promise<any>;
       saveTireData: (data: any) => Promise<void>;
       getTrack: (trackId: string) => Promise<any>;
+      getTracks: () => Promise<Track[]>;
       getStintData: () => Promise<Stint[]>;
       getTire: (tireId: string) => Promise<Tire>;
     };

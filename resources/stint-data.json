@@ -1,38 +1,82 @@
 {
-  "1": {
-    "stintId": "1",
-    "date": "2024-10-23T13:35:00.000Z",
-    "laps": 12,
-    "trackId": "1",
-    "trackName": "Mantorp Park",
-    "trackLength": 3106,
-    "rfTireId": "1",
-    "lfTireId": "2",
-    "rrTireId": "3",
-    "lrTireId": "4"
-  },
-  "2": {
-    "stintId": "2",
-    "date": "2024-10-23T15:23:00.000Z",
-    "laps": 8,
-    "trackId": "1",
-    "trackName": "Mantorp Park",
-    "trackLength": 3106,
-    "rfTireId": "2",
-    "lfTireId": "1",
-    "rrTireId": "4",
-    "lrTireId": "3"
-  },
-  "3": {
-    "stintId": "3",
-    "date": "2025-03-09T17:44:00.000Z",
-    "laps": 20,
-    "trackId": "2",
-    "trackName": "Gelleråsen",
-    "trackLength": 2350,
-    "rfTireId": "2",
-    "lfTireId": "1",
-    "rrTireId": "4",
-    "lrTireId": "3"
-  }
+  "stints": [
+    {
+      "stintId": "1",
+      "date": "2024-10-23T13:35:00.000Z",
+      "laps": 12,
+      "trackId": "1",
+      "trackName": "Mantorp Park",
+      "trackLength": 3106,
+      "tires": [
+        {
+          "tireId": "1",
+          "position": "rf"
+        },
+        {
+          "tireId": "2",
+          "position": "lf"
+        },
+        {
+          "tireId": "3",
+          "position": "rr"
+        },
+        {
+          "tireId": "4",
+          "position": "lr"
+        }
+      ]
+    },
+    {
+      "stintId": "2",
+      "date": "2024-10-23T15:23:00.000Z",
+      "laps": 8,
+      "trackId": "1",
+      "trackName": "Mantorp Park",
+      "trackLength": 3106,
+      "tires": [
+        {
+          "tireId": "2",
+          "position": "rf"
+        },
+        {
+          "tireId": "1",
+          "position": "lf"
+        },
+        {
+          "tireId": "4",
+          "position": "rr"
+        },
+        {
+          "tireId": "3",
+          "position": "lr"
+        }
+      ]
+    },
+    {
+      "stintId": "3",
+      "date": "2025-03-09T17:44:00.000Z",
+      "laps": 20,
+      "trackId": "2",
+      "trackName": "Gelleråsen",
+      "trackLength": 2350,
+      "tires": [
+        {
+          "tireId": "2",
+          "position": "rf"
+        },
+        {
+          "tireId": "1",
+          "position": "lf"
+        },
+        {
+          "tireId": "4",
+          "position": "rr"
+        },
+        {
+          "tireId": "3",
+          "position": "lr"
+        }
+      ]
+    }
+  ]
 }

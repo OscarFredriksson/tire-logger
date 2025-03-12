@@ -6,13 +6,13 @@ import {
   Center,
   Group,
   Table,
-  Text,
   Title
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
-import { Stint } from '@shared/model';
+import { Stint as IStint } from '@shared/model';
 import { IconArrowRight, IconPlus } from '@tabler/icons-react';
 import { FC, useEffect, useState } from 'react';
+import { Stint } from './Stint';
 
 function AccordionControl(props: AccordionControlProps) {
   return (
@@ -26,11 +26,11 @@ function AccordionControl(props: AccordionControlProps) {
 }
 
 export const Stints: FC = () => {
-  const [stints, setStintData] = useState<Stint[]>();
+  const [stints, setStintData] = useState<IStint[]>();
 
   useEffect(() => {
     const getStintData = async () => {
-      const data: Stint[] = await window.api.getStintData();
+      const data: IStint[] = await window.api.getStintData();
       setStintData(data);
     };
     getStintData();
@@ -38,11 +38,11 @@ export const Stints: FC = () => {
 
   const addStint = () =>
     modals.openConfirmModal({
-      title: 'Add stint',
-      children: <Text size="sm">Add stint form here</Text>,
+      children: <Stint />,
       labels: { confirm: 'Add', cancel: 'Cancel' },
-      onCancel: () => console.log('Cancel'),
-      onConfirm: () => console.log('Add')
+      withCloseButton: false,
+      onConfirm: () => console.log('Add'),
+      onCancel: () => console.log('Cancel')
     });
 
   return (
@@ -57,7 +57,7 @@ export const Stints: FC = () => {
         <Accordion key={stint.stintId} chevronPosition="left" variant="separated" className="mt-2">
           <Accordion.Item value="value1" key="key1">
             <AccordionControl>
-              {stint.trackName} {stint.date.toISOString()} {stint.laps} laps
+              {stint.trackName} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps
             </AccordionControl>
             <Accordion.Panel>
               <Table>

@@ -14,6 +14,7 @@ export interface Stint {
 
 export interface Tire {
   tireId: string;
+  name: string;
   stints: Stint[];
 }
 
