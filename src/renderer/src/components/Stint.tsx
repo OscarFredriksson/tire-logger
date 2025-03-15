@@ -12,32 +12,22 @@ import {
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { Track } from '@shared/model';
-import { FC, useEffect, useMemo, useState } from 'react';
-import { Tire as ITire } from '@shared/model';
+import { FC, useMemo } from 'react';
+import { useTires } from '@renderer/hooks/useTires';
+import { useTracks } from '@renderer/hooks/useTracks';
 
-export const Stint: FC = () => {
-  const [tracks, setTracks] = useState<Track[]>();
-  const [tires, setTires] = useState<ITire[]>();
+export interface StintProps {
+  stintId?: string;
+}
 
-  useEffect(() => {
-    const getTrackData = async () => {
-      const tracks = await window.api.getTracks();
-      setTracks(tracks);
-    };
-    const getTireData = async () => {
-      const data: ITire[] = await window.api.getTireData();
-      console.log(data);
-      setTires(data);
-    };
-    getTrackData();
-    getTireData();
-  }, []);
+export const Stint: FC<StintProps> = ({ stintId }) => {
+  const { tracks } = useTracks();
+  const { tires } = useTires();
 
   const form = useForm({
     initialValues: {
       date: new Date(),
-      track: undefined,
+      trackId: undefined,
       laps: undefined,
       leftFront: undefined,
       rightFront: undefined,
@@ -48,7 +38,7 @@ export const Stint: FC = () => {
   });
 
   const getDistanceProps = () => {
-    const track = tracks?.find((track) => track.trackId === form.getValues().track);
+    const track = tracks?.find((track) => track.trackId === form.getValues().trackId);
     const laps = form.getValues().laps;
 
     if (!track) return { placeholder: 'Select track...' };
@@ -69,7 +59,7 @@ export const Stint: FC = () => {
 
   return (
     <div>
-      <Title>New Stint</Title>
+      <Title>{stintId ? 'Edit Stint' : 'New Stint'}</Title>
       {!tracks || !tireSelections ? (
         <Loader />
       ) : (
@@ -83,9 +73,10 @@ export const Stint: FC = () => {
             label="Track"
             placeholder="Select track"
             allowDeselect={false}
-            key={form.key('track')}
+            key={form.key('trackId')}
             data={tracks.map(({ trackId, name }) => ({ value: trackId, label: name }))}
-            {...form.getInputProps('track')}
+            {...form.getInputProps('trackId')}
+            searchable
           />
 
           <Group grow>
@@ -105,6 +96,7 @@ export const Stint: FC = () => {
                 label="Left Front"
                 placeholder="Select left front"
                 data={tireSelections}
+                searchable
                 key={form.key('leftFront')}
                 {...form.getInputProps('leftFront')}
               />
@@ -114,6 +106,7 @@ export const Stint: FC = () => {
                 label="Right Front"
                 placeholder="Select right front"
                 data={tireSelections}
+                searchable
                 key={form.key('rightFront')}
                 {...form.getInputProps('rightFront')}
               />
@@ -123,6 +116,7 @@ export const Stint: FC = () => {
                 label="Left Rear"
                 placeholder="Select left rear"
                 data={tireSelections}
+                searchable
                 key={form.key('leftRear')}
                 {...form.getInputProps('leftRear')}
               />
@@ -132,6 +126,7 @@ export const Stint: FC = () => {
                 label="Right Rear"
                 placeholder="Select right rear"
                 data={tireSelections}
+                searchable
                 key={form.key('rightRear')}
                 {...form.getInputProps('rightRear')}
               />

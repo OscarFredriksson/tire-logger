@@ -4,7 +4,7 @@ import { Stint, Tire, Track } from '../shared/model';
 
 // Custom APIs for renderer
 const api = {
-  getTireData: (): Promise<any> => ipcRenderer.invoke('getTireData'),
+  getTires: (): Promise<any> => ipcRenderer.invoke('getTires'),
   saveTireData: (data: any) => ipcRenderer.invoke('saveTireData', data),
   getTrack: (trackId: string): Promise<any> => ipcRenderer.invoke('getTrack', trackId),
   getTracks: (): Promise<Track[]> => ipcRenderer.invoke('getTracks'),

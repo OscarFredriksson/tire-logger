@@ -4,13 +4,11 @@ import { Stint, Stints, Tire, Tires, Track } from '../shared/model';
 
 const readTrackDataFromFile = () => {
   const data = JSON.parse(readFileSync(TRACK_DATA_PATH, 'utf-8'));
-  console.log('track data', data);
   return data;
 };
 
 const readTireDataFromFile = () => {
   const data = JSON.parse(readFileSync(TIRE_DATA_PATH, 'utf-8')) as Tires;
-  console.log('tire data', data);
   return data.tires;
 };
 
@@ -50,7 +48,7 @@ const enrichTiresWithTrackData = (tires: Tire[]): Tire[] => {
   }));
 };
 
-const getTireData = () => {
+const getTires = async () => {
   return enrichTiresWithTrackData(tires);
 };
 
@@ -64,4 +62,4 @@ const getStintData = () => {
   return enrichStintsWithTrackData(data.stints);
 };
 
-export const handlers = [getTireData, saveTireData, getStintData, getTire, getTracks];
+export const handlers = [getTires, saveTireData, getStintData, getTire, getTracks];

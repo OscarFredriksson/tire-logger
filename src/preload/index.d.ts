@@ -5,7 +5,7 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      getTireData: () => Promise<any>;
+      getTires: () => Promise<Tire[]>;
       saveTireData: (data: any) => Promise<void>;
       getTrack: (trackId: string) => Promise<any>;
       getTracks: () => Promise<Track[]>;

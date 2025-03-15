@@ -1,44 +1,42 @@
 import {
   Accordion,
-  AccordionControlProps,
   ActionIcon,
   Button,
   Center,
   Group,
+  Loader,
   Table,
-  Title
+  Title,
+  Tooltip
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
-import { Stint as IStint } from '@shared/model';
-import { IconArrowRight, IconPlus } from '@tabler/icons-react';
-import { FC, useEffect, useState } from 'react';
-import { Stint } from './Stint';
+import { IconEdit, IconPlus } from '@tabler/icons-react';
+import { FC, PropsWithChildren } from 'react';
+import { Stint, StintProps } from './Stint';
+import { themeConstants } from '@renderer/theme';
+import { useStints } from '@renderer/hooks/useStints';
 
-function AccordionControl(props: AccordionControlProps) {
+const AccordionControl: FC<
+  PropsWithChildren<{ stintId: string; openStintModal: (props?: StintProps) => void }>
+> = ({ stintId, openStintModal }) => {
   return (
     <Center>
-      <Accordion.Control {...props} />
-      <ActionIcon className="mr-2" size="lg" variant="gradient">
-        <IconArrowRight size={16} />
-      </ActionIcon>
+      <Accordion.Control />
+      <Tooltip withArrow label="Edit stint" openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
+        <ActionIcon className="mr-2" size="lg" variant="light">
+          <IconEdit size={20} onClick={() => openStintModal({ stintId })} />
+        </ActionIcon>
+      </Tooltip>
     </Center>
   );
-}
+};
 
 export const Stints: FC = () => {
-  const [stints, setStintData] = useState<IStint[]>();
+  const { loading, stints } = useStints();
 
-  useEffect(() => {
-    const getStintData = async () => {
-      const data: IStint[] = await window.api.getStintData();
-      setStintData(data);
-    };
-    getStintData();
-  }, []);
-
-  const addStint = () =>
+  const openStintModal = (props?: StintProps) =>
     modals.openConfirmModal({
-      children: <Stint />,
+      children: <Stint {...props} />,
       labels: { confirm: 'Add', cancel: 'Cancel' },
       withCloseButton: false,
       onConfirm: () => console.log('Add'),
@@ -49,39 +47,51 @@ export const Stints: FC = () => {
     <>
       <Group justify="space-between">
         <Title>Stints</Title>
-        <Button variant="gradient" rightSection={<IconPlus />} onClick={addStint}>
+        <Button variant="gradient" rightSection={<IconPlus />} onClick={() => openStintModal()}>
           Add stint
         </Button>
       </Group>
-      {stints?.map((stint) => (
-        <Accordion key={stint.stintId} chevronPosition="left" variant="separated" className="mt-2">
-          <Accordion.Item value="value1" key="key1">
-            <AccordionControl>
-              {stint.trackName} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps
-            </AccordionControl>
-            <Accordion.Panel>
-              <Table>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Position</Table.Th>
-                    <Table.Th>Tire name</Table.Th>
-                    <Table.Th>Total laps</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-
-                <Table.Tbody>
-                  {stint.tires?.map(({ tireId, position }) => (
-                    <Table.Tr key={tireId}>
-                      <Table.Td>{position}</Table.Td>
-                      <Table.Td>{tireId}</Table.Td>
+      {loading ? (
+        <Loader />
+      ) : (
+        stints?.map((stint) => (
+          <Accordion
+            key={stint.stintId}
+            chevronPosition="left"
+            variant="separated"
+            className="mt-2"
+          >
+            <Accordion.Item value="value1" key="key1">
+              <AccordionControl
+                stintId={stint.stintId}
+                openStintModal={() => openStintModal({ stintId: stint.stintId })}
+              >
+                {stint.trackName} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps
+              </AccordionControl>
+              <Accordion.Panel>
+                <Table>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Position</Table.Th>
+                      <Table.Th>Tire name</Table.Th>
+                      <Table.Th>Total laps</Table.Th>
                     </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Accordion.Panel>
-          </Accordion.Item>
-        </Accordion>
-      ))}
+                  </Table.Thead>
+
+                  <Table.Tbody>
+                    {stint.tires?.map(({ tireId, position }) => (
+                      <Table.Tr key={tireId}>
+                        <Table.Td>{position}</Table.Td>
+                        <Table.Td>{tireId}</Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
+        ))
+      )}
     </>
   );
 };
