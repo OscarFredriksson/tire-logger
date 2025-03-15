@@ -19,6 +19,7 @@ export const Tires: FC<TiresProps> = ({ tires }) => {
       children: <AddTire />,
       labels: { confirm: 'Add', cancel: 'Cancel' },
       withCloseButton: false,
+      closeOnClickOutside: false,
       onConfirm: () => console.log('Add'),
       onCancel: () => console.log('Cancel')
     });

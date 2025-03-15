@@ -4,6 +4,7 @@
   "description": "Tire logger",
   "main": "./out/main/index.js",
   "author": "oscar@famfredriksson.com",
+  "license": "MIT",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
