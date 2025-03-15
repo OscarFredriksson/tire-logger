@@ -6,6 +6,7 @@ import {
   NumberInput,
   Select,
   Stack,
+  Textarea,
   TextInput,
   Title
 } from '@mantine/core';
@@ -41,7 +42,8 @@ export const Stint: FC = () => {
       leftFront: undefined,
       rightFront: undefined,
       leftRear: undefined,
-      rightRear: undefined
+      rightRear: undefined,
+      note: undefined
     }
   });
 
@@ -80,10 +82,12 @@ export const Stint: FC = () => {
           <Select
             label="Track"
             placeholder="Select track"
+            allowDeselect={false}
             key={form.key('track')}
             data={tracks.map(({ trackId, name }) => ({ value: trackId, label: name }))}
             {...form.getInputProps('track')}
           />
+
           <Group grow>
             <NumberInput
               label="Laps"
@@ -134,6 +138,12 @@ export const Stint: FC = () => {
             </Grid.Col>
           </Grid>
           <Divider />
+          <Textarea
+            label="Additional notes"
+            placeholder="You can add additional notes here..."
+            key={form.key('note')}
+            {...form.getInputProps('note')}
+          />
         </Stack>
       )}
     </div>
