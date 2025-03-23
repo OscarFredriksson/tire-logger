@@ -18,10 +18,10 @@ import { useStints } from '@renderer/hooks/useStints';
 
 const AccordionControl: FC<
   PropsWithChildren<{ stintId: string; openStintModal: (props?: StintProps) => void }>
-> = ({ stintId, openStintModal }) => {
+> = ({ stintId, openStintModal, ...props }) => {
   return (
     <Center>
-      <Accordion.Control />
+      <Accordion.Control {...props} />
       <Tooltip withArrow label="Edit stint" openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
         <ActionIcon className="mr-2" size="lg" variant="light">
           <IconEdit size={20} onClick={() => openStintModal({ stintId })} />

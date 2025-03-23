@@ -3,6 +3,7 @@ import {
   Grid,
   Group,
   Loader,
+  LoadingOverlay,
   NumberInput,
   Select,
   Stack,
@@ -12,34 +13,49 @@ import {
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { useTires } from '@renderer/hooks/useTires';
 import { useTracks } from '@renderer/hooks/useTracks';
+import { useStints } from '@renderer/hooks/useStints';
 
 export interface StintProps {
   stintId?: string;
 }
 
+interface StintForm {
+  date: Date;
+  trackId?: string;
+  laps?: number;
+  leftFront?: string;
+  rightFront?: string;
+  leftRear?: string;
+  rightRear?: string;
+  note?: string;
+}
+
 export const Stint: FC<StintProps> = ({ stintId }) => {
   const { tracks } = useTracks();
   const { tires } = useTires();
+  const { getStint } = useStints();
 
-  const form = useForm({
+  const { initialize, getValues, ...form } = useForm<StintForm>({
+    mode: 'uncontrolled',
     initialValues: {
-      date: new Date(),
-      trackId: undefined,
-      laps: undefined,
-      leftFront: undefined,
-      rightFront: undefined,
-      leftRear: undefined,
-      rightRear: undefined,
-      note: undefined
+      date: new Date()
     }
   });
 
+  useEffect(() => {
+    const stint = stintId && getStint(stintId);
+    if (stint) {
+      initialize(stint);
+      console.log('initializing stint');
+    }
+  }, [stintId]);
+
   const getDistanceProps = () => {
-    const track = tracks?.find((track) => track.trackId === form.getValues().trackId);
-    const laps = form.getValues().laps;
+    const { trackId, laps } = getValues();
+    const track = tracks?.find((track) => track.trackId === trackId);
 
     if (!track) return { placeholder: 'Select track...' };
     if (!laps) return { placeholder: 'Enter number of laps...' };
@@ -47,19 +63,22 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
     return { value: `${track.length * laps} m` };
   };
 
-  const { leftFront, rightFront, leftRear, rightRear } = form.getValues();
+  const { leftFront, rightFront, leftRear, rightRear } = getValues();
 
-  const tireSelections = useMemo(() => {
-    return tires
-      ?.map(({ tireId, name }) => ({ value: tireId, label: name }))
-      .filter(({ value }) =>
-        [leftFront, rightFront, leftRear, rightRear].every((tire) => tire !== value)
-      );
-  }, [tires, leftFront, rightFront, leftRear, rightRear]);
+  const tireSelections = useMemo(
+    () =>
+      tires
+        ?.map(({ tireId, name }) => ({ value: tireId, label: name }))
+        .filter(({ value }) =>
+          [leftFront, rightFront, leftRear, rightRear].every((tire) => tire !== value)
+        ),
+    [tires, leftFront, rightFront, leftRear, rightRear]
+  );
 
   return (
     <div>
       <Title>{stintId ? 'Edit Stint' : 'New Stint'}</Title>
+      <LoadingOverlay visible={!form.initialized} />
       {!tracks || !tireSelections ? (
         <Loader />
       ) : (
