@@ -3,26 +3,28 @@ import { useEffect, useState } from 'react';
 type UseFetch<T> = [boolean, T | undefined];
 
 // TODO: reconsider this cache pattern
-const cache = {} as Record<string, any>;
+// const cache = {} as Record<string, any>;
 
-const getOrCreate = async <T>(name: string, dataFetcher: () => Promise<T>): Promise<T> => {
-  if (cache[name]) return cache[name];
+// const getOrCreate = async <T>(name: string, dataFetcher: () => Promise<T>): Promise<T> => {
+//   if (cache[name]) return cache[name];
 
-  const data = await dataFetcher();
-  cache[name] = data;
-  return data;
-};
+//   const data = await dataFetcher();
+//   cache[name] = data;
+//   return data;
+// };
 
-export const useFetch = <T>(name: string, dataFetcher: () => Promise<T>): UseFetch<T> => {
+export const useFetch = <T>(dataFetcher: () => Promise<T>): UseFetch<T> => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<T>();
 
+  // console.log('cache', cache);
+
   useEffect(() => {
-    getOrCreate(name, dataFetcher).then((data) => {
+    dataFetcher().then((data) => {
       setData(data);
       setLoading(false);
     });
-  }, [dataFetcher, name]);
+  }, [dataFetcher]);
 
   return [loading, data];
 };

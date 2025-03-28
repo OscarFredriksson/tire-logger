@@ -1,5 +1,5 @@
 import { Stint } from '@shared/model';
-import { useFetch } from './useFetch';
+import { cache, useEffect, useState } from 'react';
 
 interface UseStints {
   loading: boolean;
@@ -7,14 +7,20 @@ interface UseStints {
   getStint: (stintId: string) => Stint | undefined;
 }
 
+const getStints = cache(window.api.getStintData);
+
 export const useStints = (): UseStints => {
-  const [loading, stints] = useFetch('getStints', window.api.getStintData);
+  const [stints, setStints] = useState<Stint[]>();
+
+  useEffect(() => {
+    getStints().then(setStints);
+  }, []);
 
   const getStint = (stintId: string): Stint | undefined =>
     stints?.find((stint) => stint.stintId === stintId);
 
   return {
-    loading,
+    loading: !stints,
     stints,
     getStint
   };

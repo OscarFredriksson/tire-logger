@@ -13,7 +13,7 @@ import {
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { FC, useEffect, useMemo } from 'react';
+import { FC, useMemo } from 'react';
 import { useTires } from '@renderer/hooks/useTires';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { useStints } from '@renderer/hooks/useStints';
@@ -36,22 +36,24 @@ interface StintForm {
 export const Stint: FC<StintProps> = ({ stintId }) => {
   const { tracks } = useTracks();
   const { tires } = useTires();
-  const { getStint } = useStints();
+  const { getStint, loading: loadingStints } = useStints();
 
-  const { initialize, getValues, ...form } = useForm<StintForm>({
-    mode: 'uncontrolled',
-    initialValues: {
-      date: new Date()
-    }
+  const { getValues, ...form } = useForm<StintForm>({
+    mode: 'uncontrolled'
   });
 
-  useEffect(() => {
-    const stint = stintId && getStint(stintId);
-    if (stint) {
-      initialize(stint);
-      console.log('initializing stint');
+  if (!form.initialized) {
+    if (!stintId) {
+      form.initialize({ date: new Date() });
+    } else if (!loadingStints) {
+      const stint = getStint(stintId);
+      if (stint) {
+        form.initialize(stint);
+      } else {
+        throw new Error(`Stint with id ${stintId} not found`);
+      }
     }
-  }, [stintId]);
+  }
 
   const getDistanceProps = () => {
     const { trackId, laps } = getValues();

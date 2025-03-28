@@ -1,5 +1,6 @@
 import { Tire } from '@shared/model';
 import { useFetch } from './useFetch';
+import { cache } from 'react';
 
 interface UseTires {
   loading: boolean;
@@ -7,8 +8,10 @@ interface UseTires {
   getTire: (tireId: string) => Tire | undefined;
 }
 
+const getTires = cache(window.api.getTires);
+
 export const useTires = (): UseTires => {
-  const [loading, tires] = useFetch('getTires', window.api.getTires);
+  const [loading, tires] = useFetch(getTires);
 
   const getTire = (tireId: string) => {
     return tires?.find((tire) => tire.tireId === tireId);
