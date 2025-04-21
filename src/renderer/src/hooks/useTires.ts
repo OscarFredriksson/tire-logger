@@ -1,6 +1,5 @@
 import { Tire } from '@shared/model';
-import { useFetch } from './useFetch';
-import { cache } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 interface UseTires {
   loading: boolean;
@@ -8,17 +7,18 @@ interface UseTires {
   getTire: (tireId: string) => Tire | undefined;
 }
 
-const getTires = cache(window.api.getTires);
-
 export const useTires = (): UseTires => {
-  const [loading, tires] = useFetch(getTires);
+  const { data: tires, isLoading } = useQuery({
+    queryKey: ['tires'],
+    queryFn: window.api.getTires
+  });
 
   const getTire = (tireId: string) => {
     return tires?.find((tire) => tire.tireId === tireId);
   };
 
   return {
-    loading,
+    loading: isLoading,
     tires,
     getTire
   };

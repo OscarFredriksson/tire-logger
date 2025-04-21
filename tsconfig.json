@@ -2,11 +2,13 @@
   "files": [],
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
   "compilerOptions": {
+    "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
       "@shared/*": [
         "src/shared/*"
       ]
-    }
-  },
+    },
+    "types": ["jest"]
+  }
 }

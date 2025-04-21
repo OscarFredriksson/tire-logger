@@ -7,17 +7,24 @@ import { MantineProvider } from '@mantine/core';
 import { App } from './App';
 import { HashRouter, Route, Routes } from 'react-router';
 import { ModalsProvider } from '@mantine/modals';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { refetchOnWindowFocus: false } }
+});
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
-    <MantineProvider defaultColorScheme="dark">
-      <ModalsProvider>
-        <HashRouter>
-          <Routes>
-            <Route path="*" element={<App />} />
-          </Routes>
-        </HashRouter>
-      </ModalsProvider>
-    </MantineProvider>
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider defaultColorScheme="dark">
+        <ModalsProvider>
+          <HashRouter>
+            <Routes>
+              <Route path="*" element={<App />} />
+            </Routes>
+          </HashRouter>
+        </ModalsProvider>
+      </MantineProvider>
+    </QueryClientProvider>
   </StrictMode>
 );

@@ -17,6 +17,7 @@ import { FC, useMemo } from 'react';
 import { useTires } from '@renderer/hooks/useTires';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { useStints } from '@renderer/hooks/useStints';
+import { formatDistance } from '../utils/distanceUtils';
 
 export interface StintProps {
   stintId?: string;
@@ -62,7 +63,7 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
     if (!track) return { placeholder: 'Select track...' };
     if (!laps) return { placeholder: 'Enter number of laps...' };
 
-    return { value: `${track.length * laps} m` };
+    return { value: formatDistance(track.length * laps) };
   };
 
   const { leftFront, rightFront, leftRear, rightRear } = getValues();

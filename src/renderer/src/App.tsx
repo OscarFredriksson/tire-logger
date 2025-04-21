@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { routes } from './routes';
 import { Stints } from './components/Stints';
 import { FC } from 'react';
+import { Tracks } from './components/Tracks';
 
 export const App: FC = () => {
   return (
@@ -16,6 +17,7 @@ export const App: FC = () => {
           <Route path={routes.STINTS} element={<Stints />} />
           <Route path={routes.TIRES} element={<Tires />} />
           <Route path={routes.TIRE_tireId} element={<Tire />} />
+          <Route path={routes.TRACKS} element={<Tracks />} />
         </Routes>
       </div>
     </>

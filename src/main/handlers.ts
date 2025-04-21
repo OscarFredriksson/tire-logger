@@ -58,7 +58,7 @@ const saveTireData = (_, data: any) => {
 
 const getStintData = () => {
   const data = JSON.parse(readFileSync(STINT_DATA_PATH, 'utf-8')) as Stints;
-  console.log('stint data', data);
+  console.log('fetching stints...');
   return enrichStintsWithTrackData(data.stints);
 };
 

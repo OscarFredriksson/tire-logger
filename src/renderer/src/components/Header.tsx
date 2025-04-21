@@ -32,6 +32,7 @@ export const Header: FC = () => {
       <Tabs.List>
         <HeaderTab route={routes.STINTS}>Stints</HeaderTab>
         <HeaderTab route={routes.TIRES}>Tires</HeaderTab>
+        <HeaderTab route={routes.TRACKS}>Tracks</HeaderTab>
         <Select
           className="m-2 ml-auto"
           value={selectedCar}

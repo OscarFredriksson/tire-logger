@@ -1,20 +1,11 @@
-import {
-  Accordion,
-  ActionIcon,
-  Button,
-  Center,
-  Group,
-  Loader,
-  Table,
-  Title,
-  Tooltip
-} from '@mantine/core';
+import { Accordion, ActionIcon, Center, Loader, Table, Tooltip } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { IconEdit, IconPlus } from '@tabler/icons-react';
 import { FC, PropsWithChildren } from 'react';
 import { Stint, StintProps } from './Stint';
 import { themeConstants } from '@renderer/theme';
 import { useStints } from '@renderer/hooks/useStints';
+import { TitleWithButton } from './common/TitleWithButton';
 
 const AccordionControl: FC<
   PropsWithChildren<{ stintId: string; openStintModal: (props?: StintProps) => void }>
@@ -45,12 +36,12 @@ export const Stints: FC = () => {
 
   return (
     <>
-      <Group justify="space-between">
-        <Title>Stints</Title>
-        <Button variant="gradient" rightSection={<IconPlus />} onClick={() => openStintModal()}>
-          Add stint
-        </Button>
-      </Group>
+      <TitleWithButton
+        title="Stints"
+        buttonIcon={<IconPlus />}
+        buttonText="Add stint"
+        onButtonClick={() => openStintModal()}
+      />
       {loading ? (
         <Loader />
       ) : (

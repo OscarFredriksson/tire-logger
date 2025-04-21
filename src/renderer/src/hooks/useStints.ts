@@ -1,5 +1,5 @@
 import { Stint } from '@shared/model';
-import { cache, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 interface UseStints {
   loading: boolean;
@@ -7,20 +7,17 @@ interface UseStints {
   getStint: (stintId: string) => Stint | undefined;
 }
 
-const getStints = cache(window.api.getStintData);
-
 export const useStints = (): UseStints => {
-  const [stints, setStints] = useState<Stint[]>();
-
-  useEffect(() => {
-    getStints().then(setStints);
-  }, []);
+  const { data: stints, isLoading } = useQuery({
+    queryKey: ['stints'],
+    queryFn: window.api.getStintData
+  });
 
   const getStint = (stintId: string): Stint | undefined =>
     stints?.find((stint) => stint.stintId === stintId);
 
   return {
-    loading: !stints,
+    loading: isLoading,
     stints,
     getStint
   };

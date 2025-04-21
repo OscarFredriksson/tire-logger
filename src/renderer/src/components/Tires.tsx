@@ -1,4 +1,4 @@
-import { Button, Group, Loader, Table, Title } from '@mantine/core';
+import { Button, Loader, Table } from '@mantine/core';
 import { IconArrowRight, IconPlus } from '@tabler/icons-react';
 import { FC } from 'react';
 import { generatePath, useNavigate } from 'react-router';
@@ -6,6 +6,7 @@ import { routes } from '@renderer/routes';
 import { modals } from '@mantine/modals';
 import { AddTire } from './AddTire';
 import { useTires } from '@renderer/hooks/useTires';
+import { TitleWithButton } from './common/TitleWithButton';
 
 export const Tires: FC = () => {
   const navigate = useNavigate();
@@ -25,12 +26,12 @@ export const Tires: FC = () => {
 
   return (
     <>
-      <Group justify="space-between">
-        <Title>Tires</Title>
-        <Button variant="gradient" rightSection={<IconPlus />} onClick={addTire}>
-          Add tire
-        </Button>
-      </Group>
+      <TitleWithButton
+        title="Tires"
+        buttonIcon={<IconPlus />}
+        buttonText="Add tire"
+        onButtonClick={addTire}
+      />
       {loading ? (
         <Loader className="mt-8" />
       ) : (

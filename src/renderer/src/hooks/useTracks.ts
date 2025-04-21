@@ -1,13 +1,13 @@
-import { cache } from 'react';
-import { useFetch } from './useFetch';
-
-const getTracks = cache(window.api.getTracks);
+import { useQuery } from '@tanstack/react-query';
 
 export const useTracks = () => {
-  const [loading, tracks] = useFetch(getTracks);
+  const { data: tracks, isLoading } = useQuery({
+    queryKey: ['tracks'],
+    queryFn: window.api.getTracks
+  });
 
   return {
-    loading,
+    loading: isLoading,
     tracks
   };
 };
