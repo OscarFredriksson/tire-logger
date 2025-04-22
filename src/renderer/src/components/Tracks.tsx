@@ -2,47 +2,49 @@ import { FC } from 'react';
 import { TitleWithButton } from './common/TitleWithButton';
 import { IconEdit, IconPlus } from '@tabler/icons-react';
 import { useTracks } from '@renderer/hooks/useTracks';
-import { ActionIcon, Loader, Table } from '@mantine/core';
-import { formatDistance } from '@renderer/utils/distanceUtils';
+import { Card, Flex, Loader } from '@mantine/core';
+import { AddTrack, AddTrackProps } from './AddTrack';
+import { modals } from '@mantine/modals';
 
 export const Tracks: FC = () => {
-  const { Thead, Tbody, Tr, Th, Td } = Table;
-
   const { loading, tracks } = useTracks();
+
+  const openTrackModal = (props?: AddTrackProps) => {
+    modals.open({
+      children: <AddTrack {...props} />,
+      withCloseButton: false
+    });
+  };
 
   return (
     <>
       <TitleWithButton
-        title="Tracks"
         buttonIcon={<IconPlus />}
         buttonText="Add track"
-        onButtonClick={() => console.log('Add track')}
-      />
+        onButtonClick={openTrackModal}
+      >
+        Tracks
+      </TitleWithButton>
       {loading ? (
         <Loader className="mt-8" />
+      ) : !tracks || tracks.length === 0 ? (
+        <div className="mt-8">No tracks found</div>
       ) : (
-        <Table className="mt-8">
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Length</Th>
-              <Th></Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {tracks?.map(({ trackId, name, length }) => (
-              <Tr key={trackId}>
-                <Td>{name}</Td>
-                <Td>{formatDistance(length)}</Td>
-                <Td>
-                  <ActionIcon className="mr-2" size="lg" variant="light">
-                    <IconEdit size={20} onClick={() => {}} />
-                  </ActionIcon>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+        <Flex className="mt-5" direction="column" gap={10}>
+          {tracks?.map(({ trackId, name, length }) => (
+            <Card key={'track-' + trackId}>
+              <TitleWithButton
+                titleOrder={3}
+                buttonText="Edit"
+                buttonIcon={<IconEdit />}
+                onButtonClick={() => {}}
+              >
+                {name}
+              </TitleWithButton>
+              Length: {length}
+            </Card>
+          ))}
+        </Flex>
       )}
     </>
   );

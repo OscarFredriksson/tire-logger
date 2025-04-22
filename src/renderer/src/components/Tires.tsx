@@ -26,12 +26,9 @@ export const Tires: FC = () => {
 
   return (
     <>
-      <TitleWithButton
-        title="Tires"
-        buttonIcon={<IconPlus />}
-        buttonText="Add tire"
-        onButtonClick={addTire}
-      />
+      <TitleWithButton buttonIcon={<IconPlus />} buttonText="Add tire" onButtonClick={addTire}>
+        Tires
+      </TitleWithButton>
       {loading ? (
         <Loader className="mt-8" />
       ) : (

@@ -35,3 +35,5 @@ export interface Tracks {
 export interface Stints {
   stints: Stint[];
 }
+
+export type PartialValue<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

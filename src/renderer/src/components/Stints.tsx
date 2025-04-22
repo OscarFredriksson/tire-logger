@@ -37,11 +37,12 @@ export const Stints: FC = () => {
   return (
     <>
       <TitleWithButton
-        title="Stints"
         buttonIcon={<IconPlus />}
         buttonText="Add stint"
         onButtonClick={() => openStintModal()}
-      />
+      >
+        Stints
+      </TitleWithButton>
       {loading ? (
         <Loader />
       ) : (
