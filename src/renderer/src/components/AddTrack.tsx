@@ -1,6 +1,7 @@
 import { Button, Group, NumberInput, Stack, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
+import { useTracks } from '@renderer/hooks/useTracks';
 import { queryClient } from '@renderer/main';
 import { FC } from 'react';
 
@@ -10,20 +11,36 @@ export interface AddTrackProps {
 
 interface TrackForm {
   trackId?: string;
-  name: string;
-  length: number;
+  name?: string;
+  length?: number;
 }
 
 export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
+  const { getTrack, loading } = useTracks();
+
   const form = useForm<TrackForm>({
     mode: 'uncontrolled'
   });
+
+  if (!form.initialized) {
+    if (!trackId) {
+      form.initialize({});
+    } else if (!loading) {
+      const track = getTrack(trackId);
+      if (track) {
+        form.initialize(track);
+      } else {
+        throw new Error(`Stint with id ${trackId} not found`);
+      }
+    }
+  }
 
   const save = () => {
     const track = form.getValues();
     console.log('saving track', { track });
     window.api.putTrack(track);
     queryClient.invalidateQueries({ queryKey: ['tracks'] });
+    modals.closeAll();
   };
 
   return (

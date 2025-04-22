@@ -49,6 +49,11 @@ const putTrack = (_, track: PartialValue<Track, 'trackId'>) => {
   }
 };
 
+const deleteTrack = (_, trackId: string) => {
+  console.log('Deleting track', trackId);
+  db.prepare('DELETE FROM tracks WHERE trackId = ?;').run(trackId);
+};
+
 const tires = readTireDataFromFile();
 
 const getTire = (_, tireId: string): Tire | undefined => {
@@ -88,4 +93,12 @@ const getStintData = () => {
   return enrichStintsWithTrackData(data.stints);
 };
 
-export const handlers = [getTires, saveTireData, getStintData, getTire, getTracks, putTrack];
+export const handlers = [
+  getTires,
+  saveTireData,
+  getStintData,
+  getTire,
+  getTracks,
+  putTrack,
+  deleteTrack
+];
