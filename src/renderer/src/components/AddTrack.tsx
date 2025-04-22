@@ -1,6 +1,7 @@
 import { Button, Group, NumberInput, Stack, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
+import { queryClient } from '@renderer/main';
 import { FC } from 'react';
 
 export interface AddTrackProps {
@@ -18,7 +19,12 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
     mode: 'uncontrolled'
   });
 
-  const save = () => {};
+  const save = () => {
+    const track = form.getValues();
+    console.log('saving track', { track });
+    window.api.putTrack(track);
+    queryClient.invalidateQueries({ queryKey: ['tracks'] });
+  };
 
   return (
     <>

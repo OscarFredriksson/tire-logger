@@ -9,7 +9,9 @@ const api = {
   getTrack: (trackId: string): Promise<any> => ipcRenderer.invoke('getTrack', trackId),
   getTracks: (): Promise<Track[]> => ipcRenderer.invoke('getTracks'),
   getStintData: (): Promise<Stint[]> => ipcRenderer.invoke('getStintData'),
-  getTire: (tireId: string): Promise<Tire> => ipcRenderer.invoke('getTire', tireId)
+  getTire: (tireId: string): Promise<Tire> => ipcRenderer.invoke('getTire', tireId),
+  putTrack: (track: Partial<Track>) => ipcRenderer.invoke('putTrack', track),
+  deleteTrack: (trackId: string) => ipcRenderer.invoke('deleteTrack', trackId)
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -11,6 +11,8 @@ declare global {
       getTracks: () => Promise<Track[]>;
       getStintData: () => Promise<Stint[]>;
       getTire: (tireId: string) => Promise<Tire>;
+      putTrack: (track: PartialValue<Track, 'trackId'>) => void;
+      deleteTrack: (trackId: string) => void;
     };
   }
 }
