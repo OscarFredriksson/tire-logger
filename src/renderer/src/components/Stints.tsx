@@ -6,6 +6,7 @@ import { Stint, StintProps } from './Stint';
 import { themeConstants } from '@renderer/theme';
 import { useStints } from '@renderer/hooks/useStints';
 import { TitleWithButton } from './common/TitleWithButton';
+import { useTracks } from '@renderer/hooks/useTracks';
 
 const AccordionControl: FC<
   PropsWithChildren<{ stintId: string; openStintModal: (props?: StintProps) => void }>
@@ -24,14 +25,12 @@ const AccordionControl: FC<
 
 export const Stints: FC = () => {
   const { loading, stints } = useStints();
+  const { getTrack } = useTracks();
 
   const openStintModal = (props?: StintProps) =>
-    modals.openConfirmModal({
+    modals.open({
       children: <Stint {...props} />,
-      labels: { confirm: 'Add', cancel: 'Cancel' },
-      withCloseButton: false,
-      onConfirm: () => console.log('Add'),
-      onCancel: () => console.log('Cancel')
+      withCloseButton: false
     });
 
   return (
@@ -58,7 +57,8 @@ export const Stints: FC = () => {
                 stintId={stint.stintId}
                 openStintModal={() => openStintModal({ stintId: stint.stintId })}
               >
-                {stint.trackName} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps
+                {getTrack(stint.trackId)?.name} - {stint.date.toISOString().substring(0, 10)} -{' '}
+                {stint.laps} laps
               </AccordionControl>
               <Accordion.Panel>
                 <Table>
@@ -71,12 +71,22 @@ export const Stints: FC = () => {
                   </Table.Thead>
 
                   <Table.Tbody>
-                    {stint.tires?.map(({ tireId, position }) => (
-                      <Table.Tr key={tireId}>
-                        <Table.Td>{position}</Table.Td>
-                        <Table.Td>{tireId}</Table.Td>
-                      </Table.Tr>
-                    ))}
+                    <Table.Tr>
+                      <Table.Td>Left Front</Table.Td>
+                      <Table.Td>{stint.leftFront}</Table.Td>
+                    </Table.Tr>
+                    <Table.Tr>
+                      <Table.Td>Right Front</Table.Td>
+                      <Table.Td>{stint.rightFront}</Table.Td>
+                    </Table.Tr>
+                    <Table.Tr>
+                      <Table.Td>Left Rear</Table.Td>
+                      <Table.Td>{stint.leftRear}</Table.Td>
+                    </Table.Tr>
+                    <Table.Tr>
+                      <Table.Td>Right rear</Table.Td>
+                      <Table.Td>{stint.rightRear}</Table.Td>
+                    </Table.Tr>
                   </Table.Tbody>
                 </Table>
               </Accordion.Panel>

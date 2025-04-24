@@ -1,4 +1,5 @@
 import {
+  Button,
   Divider,
   Grid,
   Group,
@@ -18,6 +19,7 @@ import { useTires } from '@renderer/hooks/useTires';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { useStints } from '@renderer/hooks/useStints';
 import { formatDistance } from '../utils/distanceUtils';
+import { modals } from '@mantine/modals';
 
 export interface StintProps {
   stintId?: string;
@@ -77,6 +79,13 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
         ),
     [tires, leftFront, rightFront, leftRear, rightRear]
   );
+
+  const save = () => {
+    const stint = getValues();
+    console.log('saving stint', { stint });
+    window.api.putStint(stint);
+    modals.closeAll();
+  };
 
   return (
     <div>
@@ -161,6 +170,12 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
             key={form.key('note')}
             {...form.getInputProps('note')}
           />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={modals.closeAll}>
+              Cancel
+            </Button>
+            <Button onClick={save}>Save</Button>
+          </Group>
         </Stack>
       )}
     </div>

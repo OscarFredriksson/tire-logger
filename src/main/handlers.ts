@@ -1,29 +1,18 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { STINT_DATA_PATH, TIRE_DATA_PATH } from './dataPaths';
-import { PartialValue, Stint, Stints, Tire, Tires, Track } from '../shared/model';
-import Database from 'better-sqlite3';
+import { readFileSync } from 'fs';
+import { STINT_DATA_PATH } from './dataPaths';
+import { PartialValue, Stint, Stints, Tire, Track } from '../shared/model';
 import { randomUUID } from 'crypto';
-
-const db = new Database('resources/tire-logger.db', {});
-db.pragma('journal_mode = WAL');
-
-db.prepare(
-  "CREATE TABLE IF NOT EXISTS tracks('trackId' varchar PRIMARY KEY, 'name' varchar, 'length' int);"
-).run();
-
-const insertTrack = db.prepare(
-  'INSERT OR IGNORE INTO tracks (trackId, name, length) VALUES (?, ?, ?);'
-);
-
-insertTrack.run('1', 'Mantorp Park', 3106);
-insertTrack.run('2', 'Gelleråsen', 2350);
-
-const queryTracks = db.prepare<[], Track>('SELECT * FROM tracks');
-
-const readTireDataFromFile = () => {
-  const data = JSON.parse(readFileSync(TIRE_DATA_PATH, 'utf-8')) as Tires;
-  return data.tires;
-};
+import {
+  deleteTrackId,
+  insertStint,
+  insertTire,
+  insertTrack,
+  queryTires,
+  queryTracks,
+  updateStint,
+  updateTire,
+  updateTrack
+} from './db';
 
 const getTracks = (): Track[] => {
   return queryTracks.all();
@@ -34,30 +23,49 @@ const putTrack = (_, track: PartialValue<Track, 'trackId'>) => {
 
   if (track.trackId) {
     console.log('Updating track', track.trackId);
-    db.prepare('UPDATE tracks SET name = ?, length = ? WHERE trackId = ?;').run(
-      track.name,
-      track.length,
-      track.trackId
-    );
+    updateTrack.run(track.name, track.length, track.trackId);
   } else {
     console.log('Inserting track', track.name);
-    db.prepare('INSERT INTO tracks (trackId, name, length) VALUES (?, ?, ?);').run(
-      randomUUID(),
-      track.name,
-      track.length
-    );
+    insertTrack.run(randomUUID(), track.name, track.length);
   }
 };
 
 const deleteTrack = (_, trackId: string) => {
   console.log('Deleting track', trackId);
-  db.prepare('DELETE FROM tracks WHERE trackId = ?;').run(trackId);
+  deleteTrackId.run(trackId);
 };
 
-const tires = readTireDataFromFile();
+const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
+  console.log('putStint', stint);
 
-const getTire = (_, tireId: string): Tire | undefined => {
-  return tires.find((tire) => tire.tireId === tireId);
+  if (stint.stintId) {
+    console.log('Updating stint', stint.stintId);
+    updateStint.run(
+      stint.trackId,
+      stint.carId || '1',
+      stint.date.toISOString(),
+      stint.laps,
+      stint.leftFront,
+      stint.rightFront,
+      stint.leftRear,
+      stint.rightRear,
+      stint.note
+    );
+  } else {
+    console.log('Inserting stint', stint.trackId);
+    insertStint.run(
+      randomUUID(),
+      stint.trackId,
+      stint.carId || '1',
+      stint.date.toISOString(),
+      stint.laps,
+      stint.leftFront,
+      stint.rightFront,
+      stint.leftRear,
+      stint.rightRear,
+      stint.note
+    );
+  }
 };
 
 const enrichStintsWithTrackData = (stints: Stint[]): Stint[] => {
@@ -73,19 +81,41 @@ const enrichStintsWithTrackData = (stints: Stint[]): Stint[] => {
   });
 };
 
-const enrichTiresWithTrackData = (tires: Tire[]): Tire[] => {
-  return tires.map(({ stints, ...tire }) => ({
-    ...tire,
-    stints: enrichStintsWithTrackData(stints)
-  }));
+// const enrichTiresWithTrackData = (tires: Tire[]): Tire[] => {
+//   return tires.map(({ stints, ...tire }) => ({
+//     ...tire,
+//     stints: enrichStintsWithTrackData(stints)
+//   }));
+// };
+
+const getTires = () => {
+  return queryTires.all();
 };
 
-const getTires = async () => {
-  return enrichTiresWithTrackData(tires);
-};
+const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
+  console.log('putTire', tire);
 
-const saveTireData = (_, data: any) => {
-  writeFileSync(TIRE_DATA_PATH, data);
+  if (tire.tireId) {
+    console.log('Updating tire', tire.tireId);
+    updateTire.run(
+      tire.name,
+      tire.allowedLf,
+      tire.allowedRf,
+      tire.allowedLr,
+      tire.allowedRr,
+      tire.tireId
+    );
+  } else {
+    console.log('Inserting tire', tire.name);
+    insertTire.run(
+      randomUUID(),
+      tire.name,
+      tire.allowedLf ? 1 : 0, // TODO: generalize this convertion
+      tire.allowedRf ? 1 : 0,
+      tire.allowedLr ? 1 : 0,
+      tire.allowedRr ? 1 : 0
+    );
+  }
 };
 
 const getStintData = () => {
@@ -95,9 +125,9 @@ const getStintData = () => {
 
 export const handlers = [
   getTires,
-  saveTireData,
+  putTire,
   getStintData,
-  getTire,
+  putStint,
   getTracks,
   putTrack,
   deleteTrack

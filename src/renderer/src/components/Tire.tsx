@@ -32,16 +32,15 @@ export const Tire: FC = () => {
       ) : (
         <>
           <Stack className="mt-10 mb-10">
-            <Text>Tire id: {tire?.tireId}</Text>
-            <Text>Total laps: {tire?.stints.reduce((total, { laps }) => total + laps, 0)}</Text>
+            <Text>Tire name: {tire?.name}</Text>
+            <Text>Total laps: {[].reduce((total, { laps }) => total + laps, 0)}</Text>
             <Text>
               {/* TODO: handle undefined better here. distance should always be defined */}
-              Total distance:{' '}
-              {tire?.stints.reduce((total, { distance }) => total + (distance || 0), 0)} meter
+              Total distance: {[].reduce((total, { distance }) => total + (distance || 0), 0)} meter
             </Text>
             <Text>
               Used at:{' '}
-              {tire?.stints
+              {[]
                 .map(({ trackName }) => trackName)
                 .filter((value, index, array) => array.indexOf(value) === index)
                 .join(', ')}
@@ -64,16 +63,16 @@ export const Tire: FC = () => {
                 <Table.Th>Distance (m)</Table.Th>
               </Table.Tr>
             </Table.Thead>
-            <Table.Tbody>
-              {tire?.stints.map(({ stintId, date, position, laps, distance }) => (
+            {/* <Table.Tbody>
+              {[].map(({ stintId, date, laps, distance }) => (
                 <Table.Tr key={stintId}>
-                  <Table.Td>{date.toString()}</Table.Td>
+                  <Table.Td>{date?.toString()}</Table.Td>
                   <Table.Td>{position}</Table.Td>
                   <Table.Td>{laps}</Table.Td>
                   <Table.Td>{distance}</Table.Td>
                 </Table.Tr>
               ))}
-            </Table.Tbody>
+            </Table.Tbody> */}
           </Table>
         </>
       )}

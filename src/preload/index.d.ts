@@ -5,12 +5,14 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
+      // Tires
       getTires: () => Promise<Tire[]>;
-      saveTireData: (data: any) => Promise<void>;
-      getTrack: (trackId: string) => Promise<any>;
-      getTracks: () => Promise<Track[]>;
+      putTire: (track: PartialValue<Tire, 'tireId'>) => void;
+      // Stints
       getStintData: () => Promise<Stint[]>;
-      getTire: (tireId: string) => Promise<Tire>;
+      putStint: (stint: PartialValue<Stint, 'stintId'>) => void;
+      // Tracks
+      getTracks: () => Promise<Track[]>;
       putTrack: (track: PartialValue<Track, 'trackId'>) => void;
       deleteTrack: (trackId: string) => void;
     };

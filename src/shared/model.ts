@@ -1,21 +1,37 @@
+// export interface Stint {
+//   stintId: string;
+//   laps: number;
+//   position?: string;
+//   trackId: string;
+//   date: Date;
+
+//   tires: { tireId: string; position: string }[];
+
+//   // Not stored, enriched later
+//   trackName?: string;
+//   distance?: number;
+// }
+
 export interface Stint {
   stintId: string;
-  laps: number;
-  position?: string;
   trackId: string;
+  carId: string;
   date: Date;
-
-  tires: { tireId: string; position: string }[];
-
-  // Not stored, enriched later
-  trackName?: string;
-  distance?: number;
+  laps: number;
+  leftFront?: string;
+  rightFront?: string;
+  leftRear?: string;
+  rightRear?: string;
+  note?: string;
 }
 
 export interface Tire {
   tireId: string;
   name: string;
-  stints: Stint[];
+  allowedLf: boolean;
+  allowedRf: boolean;
+  allowedLr: boolean;
+  allowedRr: boolean;
 }
 
 export interface Tires {
