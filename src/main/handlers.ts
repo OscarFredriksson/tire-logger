@@ -1,12 +1,13 @@
-import { readFileSync } from 'fs';
-import { STINT_DATA_PATH } from './dataPaths';
-import { PartialValue, Stint, Stints, Tire, Track } from '../shared/model';
+// import { readFileSync } from 'fs';
+// import { STINT_DATA_PATH } from './dataPaths';
+import { PartialValue, Stint, Tire, Track } from '../shared/model';
 import { randomUUID } from 'crypto';
 import {
   deleteTrackId,
   insertStint,
   insertTire,
   insertTrack,
+  queryStints,
   queryTires,
   queryTracks,
   updateStint,
@@ -36,23 +37,21 @@ const deleteTrack = (_, trackId: string) => {
 };
 
 const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
-  console.log('putStint', stint);
-
   if (stint.stintId) {
-    console.log('Updating stint', stint.stintId);
+    console.log('Updating stint', stint);
     updateStint.run(
       stint.trackId,
-      stint.carId || '1',
       stint.date.toISOString(),
       stint.laps,
       stint.leftFront,
       stint.rightFront,
       stint.leftRear,
       stint.rightRear,
-      stint.note
+      stint.note,
+      stint.stintId
     );
   } else {
-    console.log('Inserting stint', stint.trackId);
+    console.log('Inserting stint', stint);
     insertStint.run(
       randomUUID(),
       stint.trackId,
@@ -68,24 +67,24 @@ const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
   }
 };
 
-const enrichStintsWithTrackData = (stints: Stint[]): Stint[] => {
-  return stints.map((stint) => {
-    const track = getTracks().find(({ trackId }) => trackId === stint.trackId);
-    if (!track) return stint;
-    return {
-      ...stint,
-      date: new Date(stint.date),
-      trackName: track.name,
-      distance: stint.laps * track.length
-    };
-  });
+const getStints = () => {
+  return queryStints.all().map((stint) => ({
+    ...stint,
+    date: new Date(stint.date)
+  }));
 };
 
-// const enrichTiresWithTrackData = (tires: Tire[]): Tire[] => {
-//   return tires.map(({ stints, ...tire }) => ({
-//     ...tire,
-//     stints: enrichStintsWithTrackData(stints)
-//   }));
+// const enrichStintsWithTrackData = (stints: Stint[]): Stint[] => {
+//   return stints.map((stint) => {
+//     const track = getTracks().find(({ trackId }) => trackId === stint.trackId);
+//     if (!track) return stint;
+//     return {
+//       ...stint,
+//       date: new Date(stint.date),
+//       trackName: track.name,
+//       distance: stint.laps * track.length
+//     };
+//   });
 // };
 
 const getTires = () => {
@@ -118,17 +117,4 @@ const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
   }
 };
 
-const getStintData = () => {
-  const data = JSON.parse(readFileSync(STINT_DATA_PATH, 'utf-8')) as Stints;
-  return enrichStintsWithTrackData(data.stints);
-};
-
-export const handlers = [
-  getTires,
-  putTire,
-  getStintData,
-  putStint,
-  getTracks,
-  putTrack,
-  deleteTrack
-];
+export const handlers = [getTires, putTire, putStint, getStints, getTracks, putTrack, deleteTrack];

@@ -9,7 +9,7 @@ declare global {
       getTires: () => Promise<Tire[]>;
       putTire: (track: PartialValue<Tire, 'tireId'>) => void;
       // Stints
-      getStintData: () => Promise<Stint[]>;
+      getStints: () => Promise<Stint[]>;
       putStint: (stint: PartialValue<Stint, 'stintId'>) => void;
       // Tracks
       getTracks: () => Promise<Track[]>;

@@ -1,5 +1,5 @@
 import Database, { Statement } from 'better-sqlite3';
-import { Tire, Track } from '../shared/model';
+import { Stint, Tire, Track } from '../shared/model';
 
 const db = new Database('resources/tire-logger.db', {});
 db.pragma('journal_mode = WAL');
@@ -15,7 +15,7 @@ db.prepare(
     "'carId' varchar, " +
     "'date' varchar, " +
     "'laps' int, " +
-    "'leftFront' varchar " +
+    "'leftFront' varchar, " +
     "'rightFront' varchar, " +
     "'leftRear' varchar, " +
     "'rightRear' varchar, " +
@@ -46,16 +46,15 @@ export const insertTrack: Statement = db.prepare(
 
 export const deleteTrackId: Statement = db.prepare('DELETE FROM tracks WHERE trackId = ?;');
 
-insertTrack.run('1', 'Mantorp Park', 3106);
-insertTrack.run('2', 'Gelleråsen', 2350);
-
 export const updateStint: Statement = db.prepare(
-  'UPDATE stints SET trackId = ?, carId = ?, date = ?, laps = ?, leftFront = ?, rightFront = ?, leftRear = ?, rightRear = ?, note = ? WHERE stintId = ?;'
+  'UPDATE stints SET trackId = ?, date = ?, laps = ?, leftFront = ?, rightFront = ?, leftRear = ?, rightRear = ?, note = ? WHERE stintId = ?;'
 );
 
 export const insertStint: Statement = db.prepare(
   'INSERT INTO stints (stintId, trackId, carId, date, laps, leftFront, rightFront, leftRear, rightRear, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'
 );
+
+export const queryStints: Statement<[], Stint> = db.prepare('SELECT * FROM stints');
 
 export const queryTires: Statement<[], Tire> = db.prepare('SELECT * FROM tires');
 

@@ -1,31 +1,99 @@
-import { Accordion, ActionIcon, Center, Loader, Table, Tooltip } from '@mantine/core';
+import {
+  Accordion,
+  ActionIcon,
+  Center,
+  Divider,
+  Loader,
+  Skeleton,
+  Table,
+  Tooltip,
+  Text,
+  Menu
+} from '@mantine/core';
 import { modals } from '@mantine/modals';
-import { IconEdit, IconPlus } from '@tabler/icons-react';
-import { FC, PropsWithChildren } from 'react';
+import {
+  IconArrowRight,
+  IconDotsVertical,
+  IconEdit,
+  IconPlus,
+  IconTrash
+} from '@tabler/icons-react';
+import { FC, PropsWithChildren, useState } from 'react';
 import { Stint, StintProps } from './Stint';
 import { themeConstants } from '@renderer/theme';
 import { useStints } from '@renderer/hooks/useStints';
 import { TitleWithButton } from './common/TitleWithButton';
 import { useTracks } from '@renderer/hooks/useTracks';
+import { useTires } from '@renderer/hooks/useTires';
+import { generatePath, useNavigate } from 'react-router';
+import { routes } from '@renderer/routes';
+import { formatDistance } from '@renderer/utils/distanceUtils';
 
 const AccordionControl: FC<
   PropsWithChildren<{ stintId: string; openStintModal: (props?: StintProps) => void }>
 > = ({ stintId, openStintModal, ...props }) => {
+  const [opened, setOpened] = useState<boolean>(false);
+
   return (
     <Center>
       <Accordion.Control {...props} />
-      <Tooltip withArrow label="Edit stint" openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
-        <ActionIcon className="mr-2" size="lg" variant="light">
-          <IconEdit size={20} onClick={() => openStintModal({ stintId })} />
-        </ActionIcon>
-      </Tooltip>
+      <Menu opened={opened} onChange={setOpened}>
+        <Menu.Target>
+          <ActionIcon className="mr-2" variant="subtle" color="gray">
+            <IconDotsVertical />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item
+            leftSection={<IconEdit size={14} />}
+            onClick={() => openStintModal({ stintId })}
+          >
+            Edit stint
+          </Menu.Item>
+          <Menu.Item color="red" leftSection={<IconTrash size={14} />}>
+            Delete stint
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
     </Center>
   );
 };
 
+interface TireTableRowProps {
+  title: string;
+  tireId?: string;
+}
+
+const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
+  const { getTire, loading } = useTires();
+  const navigate = useNavigate();
+
+  return (
+    <Table.Tr>
+      <Table.Td>{title}</Table.Td>
+      <Table.Td>
+        {!loading && tireId ? getTire(tireId)?.name : <Skeleton height={8} width="50%" />}
+      </Table.Td>
+      <Table.Td>
+        <Skeleton height={8} width="40%" />
+      </Table.Td>
+      <Table.Td align="right">
+        <Tooltip withArrow label="Go to tire" openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
+          <ActionIcon size="md" variant="gradient">
+            <IconArrowRight
+              size={20}
+              onClick={() => navigate(generatePath(routes.TIRE_tireId, { tireId }))}
+            />
+          </ActionIcon>
+        </Tooltip>
+      </Table.Td>
+    </Table.Tr>
+  );
+};
+
 export const Stints: FC = () => {
-  const { loading, stints } = useStints();
-  const { getTrack } = useTracks();
+  const { loading: loadingStints, stints } = useStints();
+  const { getTrack, loading: loadingTracks } = useTracks();
 
   const openStintModal = (props?: StintProps) =>
     modals.open({
@@ -42,57 +110,56 @@ export const Stints: FC = () => {
       >
         Stints
       </TitleWithButton>
-      {loading ? (
+      {loadingStints || loadingTracks ? (
         <Loader />
       ) : (
-        stints?.map((stint) => (
-          <Accordion
-            key={stint.stintId}
-            chevronPosition="left"
-            variant="separated"
-            className="mt-2"
-          >
-            <Accordion.Item value="value1" key="key1">
-              <AccordionControl
-                stintId={stint.stintId}
-                openStintModal={() => openStintModal({ stintId: stint.stintId })}
-              >
-                {getTrack(stint.trackId)?.name} - {stint.date.toISOString().substring(0, 10)} -{' '}
-                {stint.laps} laps
-              </AccordionControl>
-              <Accordion.Panel>
-                <Table>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Position</Table.Th>
-                      <Table.Th>Tire name</Table.Th>
-                      <Table.Th>Total laps</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
+        stints?.map((stint) => {
+          const track = getTrack(stint.trackId);
 
-                  <Table.Tbody>
-                    <Table.Tr>
-                      <Table.Td>Left Front</Table.Td>
-                      <Table.Td>{stint.leftFront}</Table.Td>
-                    </Table.Tr>
-                    <Table.Tr>
-                      <Table.Td>Right Front</Table.Td>
-                      <Table.Td>{stint.rightFront}</Table.Td>
-                    </Table.Tr>
-                    <Table.Tr>
-                      <Table.Td>Left Rear</Table.Td>
-                      <Table.Td>{stint.leftRear}</Table.Td>
-                    </Table.Tr>
-                    <Table.Tr>
-                      <Table.Td>Right rear</Table.Td>
-                      <Table.Td>{stint.rightRear}</Table.Td>
-                    </Table.Tr>
-                  </Table.Tbody>
-                </Table>
-              </Accordion.Panel>
-            </Accordion.Item>
-          </Accordion>
-        ))
+          return (
+            <Accordion
+              key={stint.stintId}
+              chevronPosition="left"
+              variant="separated"
+              className="mt-2"
+            >
+              <Accordion.Item value={stint.stintId} key={stint.stintId}>
+                <AccordionControl
+                  stintId={stint.stintId}
+                  openStintModal={() => openStintModal({ stintId: stint.stintId })}
+                >
+                  {track?.name} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps{' '}
+                  <i>{track && '(' + formatDistance(track.length * stint.laps) + ')'}</i>
+                </AccordionControl>
+                <Accordion.Panel>
+                  <Table>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Tire position</Table.Th>
+                        <Table.Th>Tire name</Table.Th>
+                        <Table.Th>Total tire laps</Table.Th>
+                        <Table.Th></Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+
+                    <Table.Tbody>
+                      <TireTableRow title="Left Front" tireId={stint.leftFront} />
+                      <TireTableRow title="Right Front" tireId={stint.rightFront} />
+                      <TireTableRow title="Left Rear" tireId={stint.leftRear} />
+                      <TireTableRow title="Right Rear" tireId={stint.rightRear} />
+                    </Table.Tbody>
+                  </Table>
+                  <Divider />
+                  <div className="pl-5 pt-5">
+                    <Text size="sm" c="dimmed" fw={400}>
+                      Notes: {stint.note}
+                    </Text>
+                  </div>
+                </Accordion.Panel>
+              </Accordion.Item>
+            </Accordion>
+          );
+        })
       )}
     </>
   );

@@ -20,6 +20,7 @@ import { useTracks } from '@renderer/hooks/useTracks';
 import { useStints } from '@renderer/hooks/useStints';
 import { formatDistance } from '../utils/distanceUtils';
 import { modals } from '@mantine/modals';
+import { queryClient } from '@renderer/main';
 
 export interface StintProps {
   stintId?: string;
@@ -41,9 +42,7 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
   const { tires } = useTires();
   const { getStint, loading: loadingStints } = useStints();
 
-  const { getValues, ...form } = useForm<StintForm>({
-    mode: 'uncontrolled'
-  });
+  const form = useForm<StintForm>();
 
   if (!form.initialized) {
     if (!stintId) {
@@ -59,7 +58,7 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
   }
 
   const getDistanceProps = () => {
-    const { trackId, laps } = getValues();
+    const { trackId, laps } = form.getValues();
     const track = tracks?.find((track) => track.trackId === trackId);
 
     if (!track) return { placeholder: 'Select track...' };
@@ -68,7 +67,7 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
     return { value: formatDistance(track.length * laps) };
   };
 
-  const { leftFront, rightFront, leftRear, rightRear } = getValues();
+  const { leftFront, rightFront, leftRear, rightRear } = form.getValues();
 
   const tireSelections = useMemo(
     () =>
@@ -80,10 +79,55 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
     [tires, leftFront, rightFront, leftRear, rightRear]
   );
 
+  const allowedLfTires = useMemo(
+    () =>
+      tires
+        ?.filter(
+          ({ tireId, allowedLf }) =>
+            allowedLf && [rightFront, leftRear, rightRear].every((tire) => tire !== tireId)
+        )
+        .map(({ tireId, name }) => ({ value: tireId, label: name })),
+    [rightFront, leftRear, rightRear, tires]
+  );
+
+  const allowedRfTires = useMemo(
+    () =>
+      tires
+        ?.filter(
+          ({ tireId, allowedRf }) =>
+            allowedRf && [leftFront, leftRear, rightRear].every((tire) => tire !== tireId)
+        )
+        .map(({ tireId, name }) => ({ value: tireId, label: name })),
+    [leftFront, leftRear, rightRear, tires]
+  );
+
+  const allowedLrTires = useMemo(
+    () =>
+      tires
+        ?.filter(
+          ({ tireId, allowedLr }) =>
+            allowedLr && [leftFront, rightFront, rightRear].every((tire) => tire !== tireId)
+        )
+        .map(({ tireId, name }) => ({ value: tireId, label: name })),
+    [leftFront, rightFront, rightRear, tires]
+  );
+
+  const allowedRrTires = useMemo(
+    () =>
+      tires
+        ?.filter(
+          ({ tireId, allowedRr }) =>
+            allowedRr && [leftFront, leftRear, rightFront].every((tire) => tire !== tireId)
+        )
+        .map(({ tireId, name }) => ({ value: tireId, label: name })),
+    [leftFront, leftRear, rightFront, tires]
+  );
+
   const save = () => {
-    const stint = getValues();
+    const stint = form.getValues();
     console.log('saving stint', { stint });
     window.api.putStint(stint);
+    queryClient.invalidateQueries({ queryKey: ['stints'] });
     modals.closeAll();
   };
 
@@ -95,16 +139,11 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
         <Loader />
       ) : (
         <Stack className="mt-5">
-          <DateTimePicker
-            label="Stint time"
-            key={form.key('date')}
-            {...form.getInputProps('date')}
-          />
+          <DateTimePicker label="Stint time" {...form.getInputProps('date')} />
           <Select
             label="Track"
             placeholder="Select track"
             allowDeselect={false}
-            key={form.key('trackId')}
             data={tracks.map(({ trackId, name }) => ({ value: trackId, label: name }))}
             {...form.getInputProps('trackId')}
             searchable
@@ -112,11 +151,10 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
 
           <Group grow>
             <NumberInput
+              {...form.getInputProps('laps')}
               label="Laps"
               placeholder="Number of laps"
               min={1}
-              key={form.key('laps')}
-              {...form.getInputProps('laps')}
             />
             <TextInput disabled label="Distance" {...getDistanceProps()} />
           </Group>
@@ -124,31 +162,28 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
           <Grid>
             <Grid.Col span={6}>
               <Select
+                {...form.getInputProps('leftFront')}
                 label="Left Front"
                 placeholder="Select left front"
-                data={tireSelections}
+                data={allowedLfTires}
                 searchable
-                key={form.key('leftFront')}
-                {...form.getInputProps('leftFront')}
               />
             </Grid.Col>
             <Grid.Col span={6}>
               <Select
+                {...form.getInputProps('rightFront')}
                 label="Right Front"
                 placeholder="Select right front"
-                data={tireSelections}
+                data={allowedRfTires}
                 searchable
-                key={form.key('rightFront')}
-                {...form.getInputProps('rightFront')}
               />
             </Grid.Col>
             <Grid.Col span={6}>
               <Select
                 label="Left Rear"
                 placeholder="Select left rear"
-                data={tireSelections}
+                data={allowedLrTires}
                 searchable
-                key={form.key('leftRear')}
                 {...form.getInputProps('leftRear')}
               />
             </Grid.Col>
@@ -156,9 +191,8 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
               <Select
                 label="Right Rear"
                 placeholder="Select right rear"
-                data={tireSelections}
+                data={allowedRrTires}
                 searchable
-                key={form.key('rightRear')}
                 {...form.getInputProps('rightRear')}
               />
             </Grid.Col>
@@ -167,7 +201,6 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
           <Textarea
             label="Additional notes"
             placeholder="You can add additional notes here..."
-            key={form.key('note')}
             {...form.getInputProps('note')}
           />
           <Group justify="flex-end">

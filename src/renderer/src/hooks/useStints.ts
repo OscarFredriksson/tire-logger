@@ -10,7 +10,7 @@ interface UseStints {
 export const useStints = (): UseStints => {
   const { data: stints, isLoading } = useQuery({
     queryKey: ['stints'],
-    queryFn: window.api.getStintData
+    queryFn: window.api.getStints
   });
 
   const getStint = (stintId: string): Stint | undefined =>
