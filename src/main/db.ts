@@ -1,6 +1,8 @@
 import Database, { Statement } from 'better-sqlite3';
 import { Stint, Tire, Track } from '../shared/model';
 
+// TODO: Add createdAt and updatedAt columns to all tables
+
 const db = new Database('resources/tire-logger.db', {});
 db.pragma('journal_mode = WAL');
 
@@ -54,7 +56,9 @@ export const insertStint: Statement = db.prepare(
   'INSERT INTO stints (stintId, trackId, carId, date, laps, leftFront, rightFront, leftRear, rightRear, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'
 );
 
-export const queryStints: Statement<[], Stint> = db.prepare('SELECT * FROM stints');
+export const queryStints: Statement<[], Stint> = db.prepare(
+  'SELECT * FROM stints ORDER BY date DESC'
+);
 
 export const queryTires: Statement<[], Tire> = db.prepare('SELECT * FROM tires');
 

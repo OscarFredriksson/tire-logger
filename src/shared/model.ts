@@ -25,6 +25,10 @@ export interface Stint {
   note?: string;
 }
 
+export interface TireStint extends Stint {
+  position: 'Left Front' | 'Left Rear' | 'Right Front' | 'Right Rear';
+}
+
 export interface Tire {
   tireId: string;
   name: string;
