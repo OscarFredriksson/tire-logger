@@ -18,7 +18,7 @@ import {
   IconPlus,
   IconTrash
 } from '@tabler/icons-react';
-import { FC, PropsWithChildren, useState } from 'react';
+import { FC, PropsWithChildren, useMemo, useState } from 'react';
 import { Stint, StintProps } from './Stint';
 import { themeConstants } from '@renderer/theme';
 import { useStints } from '@renderer/hooks/useStints';
@@ -66,7 +66,14 @@ interface TireTableRowProps {
 
 const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
   const { getTire, loading } = useTires();
+  const { loading: loadingStints, getTireStints } = useStints();
+  const { loading: loadingTracks, getTrack } = useTracks();
   const navigate = useNavigate();
+
+  const tireStints = useMemo(
+    () => !loadingStints && tireId && getTireStints(tireId),
+    [loadingStints, tireId, getTireStints]
+  );
 
   return (
     <Table.Tr>
@@ -75,7 +82,20 @@ const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
         {!loading && tireId ? getTire(tireId)?.name : <Skeleton height={8} width="50%" />}
       </Table.Td>
       <Table.Td>
-        <Skeleton height={8} width="40%" />
+        {loadingStints || loadingTracks ? (
+          <Skeleton height={8} width="40%" />
+        ) : tireStints ? (
+          tireStints.reduce((total, { laps }) => total + laps, 0) +
+          ' laps - ' +
+          formatDistance(
+            tireStints.reduce(
+              (total, { trackId, laps }) => total + laps * (getTrack(trackId)?.length || 0),
+              0
+            )
+          )
+        ) : (
+          '-'
+        )}
       </Table.Td>
       <Table.Td align="right">
         <Tooltip withArrow label="Go to tire" openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
@@ -137,7 +157,7 @@ export const Stints: FC = () => {
                       <Table.Tr>
                         <Table.Th>Tire position</Table.Th>
                         <Table.Th>Tire name</Table.Th>
-                        <Table.Th>Total tire laps</Table.Th>
+                        <Table.Th>Total tire usage</Table.Th>
                         <Table.Th></Table.Th>
                       </Table.Tr>
                     </Table.Thead>

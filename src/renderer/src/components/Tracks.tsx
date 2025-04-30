@@ -1,29 +1,23 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { TitleWithButton } from './common/TitleWithButton';
-import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useTracks } from '@renderer/hooks/useTracks';
-import { ActionIcon, Card, Flex, Group, Loader, Text, Title, Tooltip } from '@mantine/core';
+import { ActionIcon, Card, Flex, Group, Loader, Menu, Text, Title } from '@mantine/core';
 import { AddTrack, AddTrackProps } from './AddTrack';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
-import { themeConstants } from '@renderer/theme';
 import { queryClient } from '@renderer/main';
 
-export const Tracks: FC = () => {
-  const { loading, tracks } = useTracks();
+interface TrackMenuProps {
+  trackId: string;
+  trackName: string;
+  openTrackModal: (props?: AddTrackProps) => void;
+}
 
-  const openTrackModal = (props?: AddTrackProps) => {
-    modals.open({
-      children: <AddTrack {...props} />,
-      withCloseButton: false
-    });
-  };
+const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal }) => {
+  const [opened, setOpened] = useState<boolean>(false);
 
-  const onEdit = (trackId: string) => {
-    openTrackModal({ trackId });
-  };
-
-  const onDelete = (trackId: string, trackName: string) => {
+  const onDelete = () => {
     modals.openConfirmModal({
       title: 'Delete track',
       children: (
@@ -33,15 +27,44 @@ export const Tracks: FC = () => {
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       withCloseButton: false,
-      onConfirm: () => onConfirmDelete(trackId),
+      onConfirm: () => onConfirmDelete(),
       onAbort: () => modals.closeAll()
     });
   };
 
-  const onConfirmDelete = (trackId: string) => {
+  const onConfirmDelete = () => {
     window.api.deleteTrack(trackId);
     queryClient.invalidateQueries({ queryKey: ['tracks'] });
     modals.closeAll();
+  };
+
+  return (
+    <Menu opened={opened} onChange={setOpened}>
+      <Menu.Target>
+        <ActionIcon className="ml-auto" variant="subtle" color="gray">
+          <IconDotsVertical />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => openTrackModal({ trackId })}>
+          Edit track
+        </Menu.Item>
+        <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+          Delete track
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  );
+};
+
+export const Tracks: FC = () => {
+  const { loading, tracks } = useTracks();
+
+  const openTrackModal = (props?: AddTrackProps) => {
+    modals.open({
+      children: <AddTrack {...props} />,
+      withCloseButton: false
+    });
   };
 
   return (
@@ -64,7 +87,8 @@ export const Tracks: FC = () => {
               <Group>
                 <Title order={5}>{name}</Title>
                 <Text c="dimmed">Length: {formatDistance(length)}</Text>
-                <Tooltip
+                <TrackMenu trackId={trackId} trackName={name} openTrackModal={openTrackModal} />
+                {/* <Tooltip
                   className="ml-auto"
                   withArrow
                   label="Edit track"
@@ -82,7 +106,7 @@ export const Tracks: FC = () => {
                   <ActionIcon size="lg" color="red" variant="light">
                     <IconTrash onClick={() => onDelete(trackId, name)} />
                   </ActionIcon>
-                </Tooltip>
+                </Tooltip> */}
               </Group>
             </Card>
           ))}
