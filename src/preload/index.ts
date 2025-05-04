@@ -4,18 +4,22 @@ import { Car, PartialValue, Stint, Tire, Track } from '../shared/model';
 
 // Custom APIs for renderer
 const api = {
+  //Tracks
+  getTracks: (): Promise<Track[]> => ipcRenderer.invoke('getTracks'),
+  putTrack: (track: PartialValue<Track, 'trackId'>) => ipcRenderer.invoke('putTrack', track),
+  deleteTrack: (trackId: string) => ipcRenderer.invoke('deleteTrack', trackId),
+  // Cars
   getCars: (): Promise<any> => ipcRenderer.invoke('getCars'),
   putCar: (car: PartialValue<Car, 'carId'>) => ipcRenderer.invoke('putCar', car),
   deleteCar: (carId: string) => ipcRenderer.invoke('deleteCar', carId),
+  // Tires
   getTires: (carId: string): Promise<any> => ipcRenderer.invoke('getTires', carId),
-  putTire: (track: PartialValue<Tire, 'tireId'>) => ipcRenderer.invoke('putTire', track),
-  getTrack: (trackId: string): Promise<any> => ipcRenderer.invoke('getTrack', trackId),
-  getTracks: (): Promise<Track[]> => ipcRenderer.invoke('getTracks'),
-  getStints: (): Promise<Stint[]> => ipcRenderer.invoke('getStints'),
-  getTire: (tireId: string): Promise<Tire> => ipcRenderer.invoke('getTire', tireId),
+  putTire: (tire: PartialValue<Tire, 'tireId'>) => ipcRenderer.invoke('putTire', tire),
+  deleteTire: (tireId: string) => ipcRenderer.invoke('deleteTire', tireId),
+  // Stints
+  getStints: (carId: string): Promise<Stint[]> => ipcRenderer.invoke('getStints', carId),
   putStint: (stint: PartialValue<Stint, 'stintId'>) => ipcRenderer.invoke('putStint', stint),
-  putTrack: (track: PartialValue<Track, 'trackId'>) => ipcRenderer.invoke('putTrack', track),
-  deleteTrack: (trackId: string) => ipcRenderer.invoke('deleteTrack', trackId)
+  deleteStint: (stintId: string) => ipcRenderer.invoke('deleteStint', stintId)
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import { TitleWithButton } from './common/TitleWithButton';
 import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useTracks } from '@renderer/hooks/useTracks';
-import { ActionIcon, Card, Flex, Group, Loader, Menu, Text, Title } from '@mantine/core';
+import { ActionIcon, Card, Flex, Group, Loader, Menu, Stack, Text, Title } from '@mantine/core';
 import { AddTrack, AddTrackProps } from './AddTrack';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
@@ -21,9 +21,17 @@ const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal }) =
     modals.openConfirmModal({
       title: 'Delete track',
       children: (
-        <Text>
-          Are you sure you want to delete the track <i>{trackName}</i>?
-        </Text>
+        <Stack justify="center">
+          <Text>
+            Are you sure you want to delete the track{' '}
+            <Text span inherit fw={800}>
+              {trackName}
+            </Text>
+            ?
+          </Text>
+
+          <Text c="red">This will also delete all stints where this track is used.</Text>
+        </Stack>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       withCloseButton: false,
@@ -79,7 +87,7 @@ export const Tracks: FC = () => {
       {loading ? (
         <Loader className="mt-8" />
       ) : !tracks || tracks.length === 0 ? (
-        <div className="mt-8">No tracks added yet</div>
+        <div className="mt-4">No tracks added yet</div>
       ) : (
         <Flex className="mt-2" direction="column" gap={10}>
           {tracks?.map(({ trackId, name, length }) => (

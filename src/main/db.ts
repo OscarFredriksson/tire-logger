@@ -1,8 +1,7 @@
 import Database, { Statement } from 'better-sqlite3';
-import { Car, Stint, Track } from '../shared/model';
+import { Car, Stint, Tire, Track } from '../shared/model';
 import { app } from 'electron';
 import path from 'path';
-// import { randomUUID } from 'crypto';
 
 // TODO: Add createdAt and updatedAt columns to all tables
 
@@ -35,22 +34,21 @@ db.prepare(
 db.prepare(
   'CREATE TABLE IF NOT EXISTS stints(' +
     "'stintId' varchar PRIMARY KEY, " +
-    "'trackId' varchar, " +
-    "'carId' varchar, " +
+    "'trackId' varchar NOT NULL, " +
+    "'carId' varchar NOT NULL, " +
     "'date' varchar, " +
     "'laps' int, " +
-    "'leftFront' varchar, " +
-    "'rightFront' varchar, " +
-    "'leftRear' varchar, " +
-    "'rightRear' varchar, " +
-    "'FOREIGN KEY(trackId)' REFERENCES tracks(trackId), " +
-    "'FOREIGN KEY(carId)' REFERENCES cars(carId), " +
-    "'FOREIGN KEY(leftFront)' REFERENCES tires(tireId), " +
-    "'FOREIGN KEY(rightFront)' REFERENCES tires(tireId), " +
-    "'FOREIGN KEY(leftRear)' REFERENCES tires(tireId), " +
-    "'FOREIGN KEY(rightRear)' REFERENCES tires(tireId), " +
-    "'note' varchar" +
-    ');'
+    "'leftFront' varchar NOT NULL, " +
+    "'rightFront' varchar NOT NULL, " +
+    "'leftRear' varchar NOT NULL, " +
+    "'rightRear' varchar NOT NULL, " +
+    "'note' varchar, " +
+    'FOREIGN KEY(trackId) REFERENCES tracks(trackId) ON DELETE CASCADE, ' +
+    'FOREIGN KEY(carId) REFERENCES cars(carId) ON DELETE CASCADE, ' +
+    'FOREIGN KEY(leftFront) REFERENCES tires(tireId) ON DELETE CASCADE, ' +
+    'FOREIGN KEY(rightFront) REFERENCES tires(tireId) ON DELETE CASCADE, ' +
+    'FOREIGN KEY(leftRear) REFERENCES tires(tireId) ON DELETE CASCADE, ' +
+    'FOREIGN KEY(rightRear) REFERENCES tires(tireId) ON DELETE CASCADE);'
 ).run();
 
 export const queryCars: Statement<[], Car> = db.prepare('SELECT * FROM cars');
@@ -81,11 +79,13 @@ export const insertStint: Statement = db.prepare(
   'INSERT INTO stints (stintId, trackId, carId, date, laps, leftFront, rightFront, leftRear, rightRear, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'
 );
 
-export const queryStints: Statement<[], Stint> = db.prepare(
-  'SELECT * FROM stints ORDER BY date DESC'
+export const queryStints: Statement<[string], Stint> = db.prepare(
+  'SELECT * FROM stints WHERE carId IS ? ORDER BY date DESC;'
 );
 
-export const queryTires: Statement = db.prepare('SELECT * FROM tires');
+export const queryTires: Statement<[string], Tire> = db.prepare(
+  'SELECT * FROM tires WHERE carId IS ?;'
+);
 
 export const updateTire: Statement = db.prepare(
   'UPDATE tires SET name = ?, allowedLf = ?, allowedRf = ?, allowedLr = ?, allowedRr = ? WHERE tireId = ?;'
@@ -94,3 +94,7 @@ export const updateTire: Statement = db.prepare(
 export const insertTire: Statement = db.prepare(
   'INSERT INTO tires (tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr) VALUES (?, ?, ?, ?, ?, ?, ?);'
 );
+
+export const deleteTireId: Statement = db.prepare('DELETE FROM tires WHERE tireId = ?;');
+
+export const deleteStintId: Statement = db.prepare('DELETE FROM stints WHERE stintId = ?;');

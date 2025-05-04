@@ -23,6 +23,7 @@ import { modals } from '@mantine/modals';
 import { queryClient } from '@renderer/main';
 
 export interface StintProps {
+  carId: string;
   stintId?: string;
 }
 
@@ -37,10 +38,10 @@ interface StintForm {
   note?: string;
 }
 
-export const Stint: FC<StintProps> = ({ stintId }) => {
+export const Stint: FC<StintProps> = ({ carId, stintId }) => {
   const { tracks } = useTracks();
-  const { tires } = useTires();
-  const { getStint, loading: loadingStints } = useStints();
+  const { tires } = useTires({ carId });
+  const { getStint, loading: loadingStints } = useStints({ carId });
 
   const form = useForm<StintForm>();
 
@@ -126,7 +127,7 @@ export const Stint: FC<StintProps> = ({ stintId }) => {
   const save = () => {
     const stint = form.getValues();
     console.log('saving stint', { stint });
-    window.api.putStint(stint);
+    window.api.putStint({ ...stint, carId });
     queryClient.invalidateQueries({ queryKey: ['stints'] });
     modals.closeAll();
   };

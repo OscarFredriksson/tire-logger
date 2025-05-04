@@ -25,13 +25,15 @@ import { useStints } from '@renderer/hooks/useStints';
 import { TitleWithButton } from './common/TitleWithButton';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { useTires } from '@renderer/hooks/useTires';
-import { generatePath, useNavigate } from 'react-router';
+import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 
 const AccordionControl: FC<
-  PropsWithChildren<{ stintId: string; openStintModal: (props?: StintProps) => void }>
-> = ({ stintId, openStintModal, ...props }) => {
+  PropsWithChildren<{
+    openStintModal: () => void;
+  }>
+> = ({ openStintModal, ...props }) => {
   const [opened, setOpened] = useState<boolean>(false);
 
   return (
@@ -44,10 +46,7 @@ const AccordionControl: FC<
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<IconEdit size={14} />}
-            onClick={() => openStintModal({ stintId })}
-          >
+          <Menu.Item leftSection={<IconEdit size={14} />} onClick={openStintModal}>
             Edit stint
           </Menu.Item>
           <Menu.Item color="red" leftSection={<IconTrash size={14} />}>
@@ -65,8 +64,9 @@ interface TireTableRowProps {
 }
 
 const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
-  const { getTire, loading } = useTires();
-  const { loading: loadingStints, getTireStints } = useStints();
+  const { carId } = useParams();
+  const { getTire, loading } = useTires({ carId });
+  const { loading: loadingStints, getTireStints } = useStints({ carId });
   const { loading: loadingTracks, getTrack } = useTracks();
   const navigate = useNavigate();
 
@@ -102,7 +102,7 @@ const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
           <ActionIcon size="md" variant="gradient">
             <IconArrowRight
               size={20}
-              onClick={() => navigate(generatePath(routes.TIRE_tireId, { tireId }))}
+              onClick={() => navigate(generatePath(routes.TIRE_tireId, { tireId, carId }))}
             />
           </ActionIcon>
         </Tooltip>
@@ -112,12 +112,13 @@ const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
 };
 
 export const Stints: FC = () => {
-  const { loading: loadingStints, stints } = useStints();
+  const { carId } = useParams();
+  const { loading: loadingStints, stints } = useStints({ carId });
   const { getTrack, loading: loadingTracks } = useTracks();
 
   const openStintModal = (props?: StintProps) =>
     modals.open({
-      children: <Stint {...props} />,
+      children: <Stint {...props} carId={carId!} />,
       withCloseButton: false
     });
 
@@ -132,6 +133,8 @@ export const Stints: FC = () => {
       </TitleWithButton>
       {loadingStints || loadingTracks ? (
         <Loader />
+      ) : !stints || stints.length === 0 ? (
+        <div className="mt-4">No stints added yet</div>
       ) : (
         stints?.map((stint) => {
           const track = getTrack(stint.trackId);
@@ -145,8 +148,7 @@ export const Stints: FC = () => {
             >
               <Accordion.Item value={stint.stintId} key={stint.stintId}>
                 <AccordionControl
-                  stintId={stint.stintId}
-                  openStintModal={() => openStintModal({ stintId: stint.stintId })}
+                  openStintModal={() => openStintModal({ stintId: stint.stintId, carId: carId! })}
                 >
                   {track?.name} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps{' '}
                   <i>{track && '(' + formatDistance(track.length * stint.laps) + ')'}</i>

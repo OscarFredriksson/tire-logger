@@ -1,9 +1,24 @@
-import { ActionIcon, Loader, Menu, Skeleton, Table, Text, Tooltip } from '@mantine/core';
+import {
+  ActionIcon,
+  Center,
+  Group,
+  Loader,
+  Menu,
+  Skeleton,
+  Stack,
+  Table,
+  Text,
+  Tooltip,
+  UnstyledButton
+} from '@mantine/core';
 import {
   IconArrowRight,
+  IconChevronDown,
+  IconChevronUp,
   IconDotsVertical,
   IconEdit,
   IconPlus,
+  IconSelector,
   IconTrash
 } from '@tabler/icons-react';
 import { FC, useState } from 'react';
@@ -18,6 +33,7 @@ import { Stint } from '@shared/model';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { queryClient } from '@renderer/main';
 import { themeConstants } from '@renderer/theme';
+import { formatDistance } from '@renderer/utils/distanceUtils';
 
 // TODO: sortable table
 
@@ -35,9 +51,16 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
     modals.openConfirmModal({
       title: 'Delete tire',
       children: (
-        <Text>
-          Are you sure you want to delete the tire <i>{tireName}</i>?
-        </Text>
+        <Stack justify="center">
+          <Text>
+            Are you sure you want to delete the tire{' '}
+            <Text span fw={800} inherit>
+              {tireName}
+            </Text>
+            ?
+          </Text>
+          <Text c="red">This will also delete all stints where this tire is used.</Text>
+        </Stack>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       withCloseButton: false,
@@ -47,8 +70,8 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
   };
 
   const onConfirmDelete = () => {
-    // window.api.deleteTire(tireId);
-    queryClient.invalidateQueries({ queryKey: ['tracks'] });
+    window.api.deleteTire(tireId);
+    queryClient.invalidateQueries({ queryKey: ['tires'] });
     modals.closeAll();
   };
 
@@ -60,14 +83,56 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => openTireModal({ tireId })}>
+        <Menu.Item
+          leftSection={<IconEdit size={14} />}
+          disabled={!carId}
+          onClick={() => openTireModal({ carId: carId!, tireId })}
+        >
           Edit tire
         </Menu.Item>
-        <Menu.Item disabled color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+        <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
           Delete tire
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
+  );
+};
+interface ThProps {
+  children: React.ReactNode;
+  reversed: boolean;
+  sorted: boolean;
+  onSort: () => void;
+}
+
+const Th: FC<ThProps> = ({ children, reversed, sorted, onSort }) => {
+  const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
+  return (
+    <Table.Th className="p-0">
+      <UnstyledButton onClick={onSort} className="control">
+        <Group justify="space-between">
+          <Text fw={500} fz="sm">
+            {children}
+          </Text>
+          <Center className="icon">
+            <Icon size={16} stroke={1.5} />
+          </Center>
+        </Group>
+      </UnstyledButton>
+    </Table.Th>
+  );
+};
+
+const sortData = (
+  data: any[],
+  sortBy: 'name' | 'distance' | 'date' | undefined,
+  reversed: boolean
+) => {
+  if (!sortBy) {
+    return data;
+  }
+
+  return data.sort((a, b) =>
+    reversed ? b[sortBy].localeCompare(a[sortBy]) : a[sortBy].localeCompare(b[sortBy])
   );
 };
 
@@ -77,7 +142,7 @@ export const Tires: FC = () => {
   const navigate = useNavigate();
 
   const { loading, tires } = useTires({ carId });
-  const { loading: loadingStints, getTireStints } = useStints();
+  const { loading: loadingStints, getTireStints } = useStints({ carId });
   const { getTrack } = useTracks();
 
   const openTireModal = (props?: AddTireProps) => {
@@ -88,6 +153,37 @@ export const Tires: FC = () => {
   };
 
   console.log('Tires', tires);
+
+  const enrichedTires = tires?.map((tire) => {
+    const tireStints = getTireStints(tire.tireId);
+
+    const lastUsedStint = tireStints?.reduce(
+      (latest, stint) => {
+        if (!latest || stint.date > latest.date) {
+          return stint;
+        }
+        return latest;
+      },
+      undefined as Stint | undefined
+    );
+    const distance = tireStints.reduce(
+      (total, { laps, trackId }) => total + laps * (getTrack(trackId)?.length || 0),
+      0
+    );
+
+    return { ...tire, distance, lastUsedStint };
+  });
+
+  const [sortBy, setSortBy] = useState<'name' | 'distance' | 'date' | undefined>(undefined);
+  const [reverseSortDirection, setReverseSortDirection] = useState(false);
+  const [sortedData, setSortedData] = useState(enrichedTires);
+
+  const setSorting = (field: 'name' | 'distance' | 'date' | undefined) => {
+    const reversed = field === sortBy ? !reverseSortDirection : false;
+    setReverseSortDirection(reversed);
+    setSortBy(field);
+    setSortedData(sortData(enrichedTires || [], field, reversed));
+  };
 
   return (
     <>
@@ -101,30 +197,37 @@ export const Tires: FC = () => {
       {loading ? (
         <Loader className="mt-8" />
       ) : !tires || tires.length === 0 ? (
-        <div>No tires added yet</div>
+        <div className="mt-4">No tires added yet</div>
       ) : (
         <Table className="mt-8">
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Total laps</Table.Th>
-              <Table.Th>Last used</Table.Th>
+              <Th
+                sorted={sortBy === 'name'}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting('name')}
+              >
+                Name
+              </Th>
+              <Th
+                sorted={sortBy === 'distance'}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting('distance')}
+              >
+                Total distance
+              </Th>
+              <Th
+                sorted={sortBy === 'date'}
+                reversed={reverseSortDirection}
+                onSort={() => setSorting('date')}
+              >
+                Last used
+              </Th>
               <Table.Th></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {tires?.map(({ tireId, name }) => {
-              const tireStints = getTireStints(tireId);
-              const lastUsedStint = tireStints?.reduce(
-                (latest, stint) => {
-                  if (!latest || stint.date > latest.date) {
-                    return stint;
-                  }
-                  return latest;
-                },
-                undefined as Stint | undefined
-              );
-
+            {sortedData?.map(({ tireId, name, distance, lastUsedStint }) => {
               const lastUsedTrack = lastUsedStint && getTrack(lastUsedStint.trackId)?.name;
 
               const lastUsedString = lastUsedStint
@@ -136,11 +239,7 @@ export const Tires: FC = () => {
                 <Table.Tr key={tireId}>
                   <Table.Td>{name}</Table.Td>
                   <Table.Td>
-                    {!loadingStints ? (
-                      tireStints.reduce((total, { laps }) => total + laps, 0)
-                    ) : (
-                      <Skeleton height={8} />
-                    )}
+                    {!loadingStints ? formatDistance(distance) : <Skeleton height={8} />}
                   </Table.Td>
                   <Table.Td>{lastUsedString}</Table.Td>
                   <Table.Td align="right">
@@ -153,7 +252,9 @@ export const Tires: FC = () => {
                       <ActionIcon size="md" variant="gradient">
                         <IconArrowRight
                           size={20}
-                          onClick={() => navigate(generatePath(routes.TIRE_tireId, { tireId }))}
+                          onClick={() =>
+                            navigate(generatePath(routes.TIRE_tireId, { carId, tireId }))
+                          }
                         />
                       </ActionIcon>
                     </Tooltip>

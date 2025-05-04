@@ -2,6 +2,8 @@ import { Car, PartialValue, Stint, Tire, Track } from '../shared/model';
 import { randomUUID } from 'crypto';
 import {
   deleteCarId,
+  deleteStintId,
+  deleteTireId,
   deleteTrackId,
   insertCar,
   insertStint,
@@ -71,8 +73,8 @@ const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
   }
 };
 
-const getStints = () => {
-  return queryStints.all().map((stint) => ({
+const getStints = (_, carId: string) => {
+  return queryStints.all(carId).map((stint) => ({
     ...stint,
     date: new Date(stint.date)
   }));
@@ -80,7 +82,7 @@ const getStints = () => {
 
 const getTires = (_, carId: string) => {
   console.log('getTires', carId);
-  const tires = queryTires.all();
+  const tires = queryTires.all(carId);
   console.log('Tires', tires);
   return tires;
 };
@@ -132,15 +134,31 @@ const deleteCar = (_, carId: string) => {
   deleteCarId.run(carId);
 };
 
+const deleteTire = (_, tireId: string) => {
+  console.log('Deleting tire', tireId);
+  deleteTireId.run(tireId);
+};
+
+const deleteStint = (_, stintId: string) => {
+  console.log('Deleting stint', stintId);
+  deleteStintId.run(stintId);
+};
+
 export const handlers = [
+  // Tracks
+  getTracks,
+  putTrack,
+  deleteTrack,
+  // Cars
   getCars,
   putCar,
   deleteCar,
+  // Tires
   getTires,
   putTire,
+  deleteTire,
+  // Stints
   putStint,
   getStints,
-  getTracks,
-  putTrack,
-  deleteTrack
+  deleteStint
 ];

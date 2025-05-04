@@ -1,10 +1,4 @@
-import {
-  IconAlertCircle,
-  IconDotsVertical,
-  IconEdit,
-  IconPlus,
-  IconTrash
-} from '@tabler/icons-react';
+import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 import { TitleWithButton } from './common/TitleWithButton';
 import { useCars } from '@renderer/hooks/useCars';
 import { ActionIcon, Card, Flex, Group, Loader, Menu, Stack, Text, Title } from '@mantine/core';
@@ -27,10 +21,6 @@ const CarMenu: FC<CarMenuProps> = ({ carId, carName, openCarModal }) => {
       title: 'Delete car',
       children: (
         <Stack justify="center">
-          <Group>
-            <IconAlertCircle />
-            <Text>Deleting a car will also delete all its tires and stints.</Text>
-          </Group>
           <Text fw={500}>
             Are you sure you want to delete the car{' '}
             <Text span fw={800} inherit>
@@ -38,6 +28,7 @@ const CarMenu: FC<CarMenuProps> = ({ carId, carName, openCarModal }) => {
             </Text>
             ?
           </Text>
+          <Text c="red">This will also delete all tires and stints for this car.</Text>
         </Stack>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
@@ -90,7 +81,7 @@ export const Cars = () => {
       {loading ? (
         <Loader className="mt-8" />
       ) : !cars || cars.length === 0 ? (
-        <div className="mt-8">No cars added yet</div>
+        <div className="mt-4">No cars added yet</div>
       ) : (
         <Flex className="mt-2" direction="column" gap={10}>
           {cars.map(({ carId, name }) => (

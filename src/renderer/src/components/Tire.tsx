@@ -1,7 +1,7 @@
 import { Button, Center, Group, Loader, Skeleton, Stack, Table, Text, Title } from '@mantine/core';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { FC, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { useTires } from '@renderer/hooks/useTires';
 import { useStints } from '@renderer/hooks/useStints';
@@ -14,7 +14,7 @@ export const Tire: FC = () => {
   const navigate = useNavigate();
 
   const { loading, getTire } = useTires({ carId });
-  const { loading: loadingStints, getTireStints } = useStints();
+  const { loading: loadingStints, getTireStints } = useStints({ carId });
   const { loading: loadingTracks, getTrack } = useTracks();
 
   const tire = useMemo(() => tireId && getTire(tireId), [getTire, tireId]);
@@ -30,7 +30,7 @@ export const Tire: FC = () => {
         <Button
           leftSection={<IconArrowLeft />}
           variant="gradient"
-          onClick={() => navigate(routes.TIRES)}
+          onClick={() => navigate(generatePath(routes.TIRES, { carId }))}
         >
           Back
         </Button>

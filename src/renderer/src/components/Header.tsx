@@ -1,5 +1,6 @@
 import { Select, Tabs, Title, Tooltip } from '@mantine/core';
 import { useCars } from '@renderer/hooks/useCars';
+import { queryClient } from '@renderer/main';
 import { routes } from '@renderer/routes';
 import { FC, PropsWithChildren, useState } from 'react';
 import { generatePath, useLocation, useNavigate } from 'react-router';
@@ -39,10 +40,17 @@ export const Header: FC = () => {
 
   const activeTab = findActiveTab(pathname, selectedCar);
 
+  if (!selectedCar && cars && cars.length > 0) {
+    setSelectedCar(cars[0].carId);
+  }
+
   const onSelectCar = (carId: string | null) => {
     if (carId) {
+      console.log('Selected car:', carId);
       setSelectedCar(carId);
-      navigate(generatePath(routes.STINTS, { carId }));
+      queryClient.invalidateQueries({ queryKey: ['stints'] });
+      queryClient.invalidateQueries({ queryKey: ['tires'] });
+      navigate(generatePath(routes.STINTS, { carId }), { replace: true });
     }
   };
 

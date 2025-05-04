@@ -1,6 +1,10 @@
 import { Stint, TireStint } from '@shared/model';
 import { useQuery } from '@tanstack/react-query';
 
+interface UseStintsProps {
+  carId?: string;
+}
+
 interface UseStints {
   loading: boolean;
   stints?: Stint[];
@@ -8,10 +12,11 @@ interface UseStints {
   getTireStints: (tireId: string) => TireStint[];
 }
 
-export const useStints = (): UseStints => {
+export const useStints = (props: UseStintsProps): UseStints => {
   const { data: stints, isLoading } = useQuery({
     queryKey: ['stints'],
-    queryFn: window.api.getStints
+    enabled: !!props?.carId,
+    queryFn: () => window.api.getStints(props.carId!)
   });
 
   const getStint = (stintId: string): Stint | undefined =>
@@ -26,13 +31,6 @@ export const useStints = (): UseStints => {
       if (rightRear === tireId) return [...stints, { ...stint, position: 'Right Rear' }];
       return stints;
     }, [] as TireStint[]) || [];
-
-  // stints?.filter((stint) => {
-  //   const { leftFront, rightFront, leftRear, rightRear } = stint;
-  //   return (
-  //     leftFront === tireId || rightFront === tireId || leftRear === tireId || rightRear === tireId
-  //   );
-  // }) || [];
 
   return {
     loading: isLoading,
