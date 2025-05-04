@@ -1,10 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
-import { PartialValue, Stint, Tire, Track } from '../shared/model';
+import { Car, PartialValue, Stint, Tire, Track } from '../shared/model';
 
 // Custom APIs for renderer
 const api = {
-  getTires: (): Promise<any> => ipcRenderer.invoke('getTires'),
+  getCars: (): Promise<any> => ipcRenderer.invoke('getCars'),
+  putCar: (car: PartialValue<Car, 'carId'>) => ipcRenderer.invoke('putCar', car),
+  deleteCar: (carId: string) => ipcRenderer.invoke('deleteCar', carId),
+  getTires: (carId: string): Promise<any> => ipcRenderer.invoke('getTires', carId),
   putTire: (track: PartialValue<Tire, 'tireId'>) => ipcRenderer.invoke('putTire', track),
   getTrack: (trackId: string): Promise<any> => ipcRenderer.invoke('getTrack', trackId),
   getTracks: (): Promise<Track[]> => ipcRenderer.invoke('getTracks'),

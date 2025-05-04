@@ -13,7 +13,7 @@
     "typecheck": "yarn typecheck:node && yarn typecheck:web",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
-    "build": "yarn typecheck && && yarn test && electron-vite build",
+    "build": "yarn typecheck && yarn test && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "yarn build && electron-builder --dir",
     "build:win": "yarn build && electron-builder --win",

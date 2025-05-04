@@ -1,17 +1,3 @@
-// export interface Stint {
-//   stintId: string;
-//   laps: number;
-//   position?: string;
-//   trackId: string;
-//   date: Date;
-
-//   tires: { tireId: string; position: string }[];
-
-//   // Not stored, enriched later
-//   trackName?: string;
-//   distance?: number;
-// }
-
 export interface Stint {
   stintId: string;
   trackId: string;
@@ -31,6 +17,7 @@ export interface TireStint extends Stint {
 
 export interface Tire {
   tireId: string;
+  carId: string;
   name: string;
   allowedLf: boolean;
   allowedRf: boolean;
@@ -48,12 +35,21 @@ export interface Track {
   length: number;
 }
 
+export interface Car {
+  carId: string;
+  name: string;
+}
+
 export interface Tracks {
   tracks: Track[];
 }
 
 export interface Stints {
   stints: Stint[];
+}
+
+export interface Cars {
+  cars: Car[];
 }
 
 export type PartialValue<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

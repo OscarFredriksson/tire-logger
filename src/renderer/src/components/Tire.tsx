@@ -10,10 +10,10 @@ import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TextWithLabel } from './common/TextWithLabel';
 
 export const Tire: FC = () => {
-  const { tireId } = useParams();
+  const { carId, tireId } = useParams();
   const navigate = useNavigate();
 
-  const { loading, getTire } = useTires();
+  const { loading, getTire } = useTires({ carId });
   const { loading: loadingStints, getTireStints } = useStints();
   const { loading: loadingTracks, getTrack } = useTracks();
 

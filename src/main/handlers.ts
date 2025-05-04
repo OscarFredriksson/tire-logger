@@ -1,19 +1,23 @@
-// import { readFileSync } from 'fs';
-// import { STINT_DATA_PATH } from './dataPaths';
-import { PartialValue, Stint, Tire, Track } from '../shared/model';
+import { Car, PartialValue, Stint, Tire, Track } from '../shared/model';
 import { randomUUID } from 'crypto';
 import {
+  deleteCarId,
   deleteTrackId,
+  insertCar,
   insertStint,
   insertTire,
   insertTrack,
+  queryCars,
   queryStints,
   queryTires,
   queryTracks,
+  updateCar,
   updateStint,
   updateTire,
   updateTrack
 } from './db';
+
+// TODO: delete stint
 
 const getTracks = (): Track[] => {
   return queryTracks.all();
@@ -74,21 +78,11 @@ const getStints = () => {
   }));
 };
 
-// const enrichStintsWithTrackData = (stints: Stint[]): Stint[] => {
-//   return stints.map((stint) => {
-//     const track = getTracks().find(({ trackId }) => trackId === stint.trackId);
-//     if (!track) return stint;
-//     return {
-//       ...stint,
-//       date: new Date(stint.date),
-//       trackName: track.name,
-//       distance: stint.laps * track.length
-//     };
-//   });
-// };
-
-const getTires = () => {
-  return queryTires.all();
+const getTires = (_, carId: string) => {
+  console.log('getTires', carId);
+  const tires = queryTires.all();
+  console.log('Tires', tires);
+  return tires;
 };
 
 const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
@@ -98,10 +92,10 @@ const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
     console.log('Updating tire', tire.tireId);
     updateTire.run(
       tire.name,
-      tire.allowedLf,
-      tire.allowedRf,
-      tire.allowedLr,
-      tire.allowedRr,
+      tire.allowedLf ? 1 : 0,
+      tire.allowedRf ? 1 : 0,
+      tire.allowedLr ? 1 : 0,
+      tire.allowedRr ? 1 : 0,
       tire.tireId
     );
   } else {
@@ -109,6 +103,7 @@ const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
     insertTire.run(
       randomUUID(),
       tire.name,
+      tire.carId,
       tire.allowedLf ? 1 : 0, // TODO: generalize this convertion
       tire.allowedRf ? 1 : 0,
       tire.allowedLr ? 1 : 0,
@@ -117,4 +112,35 @@ const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
   }
 };
 
-export const handlers = [getTires, putTire, putStint, getStints, getTracks, putTrack, deleteTrack];
+const getCars = () => {
+  return queryCars.all();
+};
+const putCar = (_, car: PartialValue<Car, 'carId'>) => {
+  console.log('putCar', car);
+
+  if (car.carId) {
+    console.log('Updating car', car.carId);
+    updateCar.run(car.name, car.carId);
+  } else {
+    console.log('Inserting car', car.name);
+    insertCar.run(randomUUID(), car.name);
+  }
+};
+
+const deleteCar = (_, carId: string) => {
+  console.log('Deleting car', carId);
+  deleteCarId.run(carId);
+};
+
+export const handlers = [
+  getCars,
+  putCar,
+  deleteCar,
+  getTires,
+  putTire,
+  putStint,
+  getStints,
+  getTracks,
+  putTrack,
+  deleteTrack
+];

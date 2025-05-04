@@ -7,11 +7,12 @@ import { Tire } from '@shared/model';
 import { FC } from 'react';
 
 export interface AddTireProps {
+  carId: string;
   tireId?: string;
 }
 
-export const AddTire: FC<AddTireProps> = ({ tireId }) => {
-  const { getTire, loading } = useTires();
+export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
+  const { getTire, loading } = useTires({ carId });
 
   const form = useForm<Partial<Tire>>({
     mode: 'uncontrolled'
@@ -33,7 +34,7 @@ export const AddTire: FC<AddTireProps> = ({ tireId }) => {
   const save = () => {
     const tire = form.getValues();
     console.log('saving tire', { tire });
-    window.api.putTire(tire);
+    window.api.putTire({ ...tire, carId });
     queryClient.invalidateQueries({ queryKey: ['tires'] });
     modals.closeAll();
   };

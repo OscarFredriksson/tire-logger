@@ -79,7 +79,7 @@ export const Tracks: FC = () => {
       {loading ? (
         <Loader className="mt-8" />
       ) : !tracks || tracks.length === 0 ? (
-        <div className="mt-8">No tracks found</div>
+        <div className="mt-8">No tracks added yet</div>
       ) : (
         <Flex className="mt-2" direction="column" gap={10}>
           {tracks?.map(({ trackId, name, length }) => (
@@ -88,25 +88,6 @@ export const Tracks: FC = () => {
                 <Title order={5}>{name}</Title>
                 <Text c="dimmed">Length: {formatDistance(length)}</Text>
                 <TrackMenu trackId={trackId} trackName={name} openTrackModal={openTrackModal} />
-                {/* <Tooltip
-                  className="ml-auto"
-                  withArrow
-                  label="Edit track"
-                  openDelay={themeConstants.TOOLTIP_OPEN_DELAY}
-                >
-                  <ActionIcon size="lg" variant="light">
-                    <IconEdit onClick={() => onEdit(trackId)} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip
-                  withArrow
-                  label="Delete track"
-                  openDelay={themeConstants.TOOLTIP_OPEN_DELAY}
-                >
-                  <ActionIcon size="lg" color="red" variant="light">
-                    <IconTrash onClick={() => onDelete(trackId, name)} />
-                  </ActionIcon>
-                </Tooltip> */}
               </Group>
             </Card>
           ))}
