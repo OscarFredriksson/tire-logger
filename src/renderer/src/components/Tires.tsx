@@ -21,7 +21,7 @@ import {
   IconSelector,
   IconTrash
 } from '@tabler/icons-react';
-import { FC, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { modals } from '@mantine/modals';
@@ -29,7 +29,7 @@ import { AddTire, AddTireProps } from './AddTire';
 import { useTires } from '@renderer/hooks/useTires';
 import { TitleWithButton } from './common/TitleWithButton';
 import { useStints } from '@renderer/hooks/useStints';
-import { Stint } from '@shared/model';
+import { Stint, Tire } from '@shared/model';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { queryClient } from '@renderer/main';
 import { themeConstants } from '@renderer/theme';
@@ -71,7 +71,7 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
 
   const onConfirmDelete = () => {
     window.api.deleteTire(tireId);
-    queryClient.invalidateQueries({ queryKey: ['tires'] });
+    queryClient.invalidateQueries({ queryKey: ['tires', carId] });
     modals.closeAll();
   };
 
@@ -123,7 +123,7 @@ const Th: FC<ThProps> = ({ children, reversed, sorted, onSort }) => {
 };
 
 const sortData = (
-  data: any[],
+  data: (Tire & { distance: number; lastUsedStint: Stint | undefined })[],
   sortBy: 'name' | 'distance' | 'date' | undefined,
   reversed: boolean
 ) => {
@@ -131,9 +131,14 @@ const sortData = (
     return data;
   }
 
-  return data.sort((a, b) =>
-    reversed ? b[sortBy].localeCompare(a[sortBy]) : a[sortBy].localeCompare(b[sortBy])
-  );
+  const sortFn = (a: (typeof data)[0], b: (typeof data)[0]) =>
+    sortBy === 'name'
+      ? a[sortBy].localeCompare(b[sortBy])
+      : sortBy === 'date'
+        ? (b.lastUsedStint?.date.getTime() || 0) - (a.lastUsedStint?.date.getTime() || 0)
+        : b[sortBy] - a[sortBy];
+
+  return data.sort((a, b) => (reversed ? sortFn(b, a) : sortFn(a, b)));
 };
 
 export const Tires: FC = () => {
@@ -154,29 +159,39 @@ export const Tires: FC = () => {
 
   console.log('Tires', tires);
 
-  const enrichedTires = tires?.map((tire) => {
-    const tireStints = getTireStints(tire.tireId);
+  const enrichedTires = useMemo(
+    () =>
+      tires?.map((tire) => {
+        const tireStints = getTireStints(tire.tireId);
 
-    const lastUsedStint = tireStints?.reduce(
-      (latest, stint) => {
-        if (!latest || stint.date > latest.date) {
-          return stint;
-        }
-        return latest;
-      },
-      undefined as Stint | undefined
-    );
-    const distance = tireStints.reduce(
-      (total, { laps, trackId }) => total + laps * (getTrack(trackId)?.length || 0),
-      0
-    );
+        const lastUsedStint = tireStints?.reduce(
+          (latest, stint) => {
+            if (!latest || stint.date > latest.date) {
+              return stint;
+            }
+            return latest;
+          },
+          undefined as Stint | undefined
+        );
+        const distance = tireStints.reduce(
+          (total, { laps, trackId }) => total + laps * (getTrack(trackId)?.length || 0),
+          0
+        );
 
-    return { ...tire, distance, lastUsedStint };
-  });
+        return { ...tire, distance, lastUsedStint };
+      }),
+    [tires, getTireStints, getTrack]
+  );
 
   const [sortBy, setSortBy] = useState<'name' | 'distance' | 'date' | undefined>(undefined);
   const [reverseSortDirection, setReverseSortDirection] = useState(false);
   const [sortedData, setSortedData] = useState(enrichedTires);
+
+  useEffect(() => {
+    console.log('setting enrichedTires', enrichedTires);
+    setSortedData(enrichedTires);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tires]);
 
   const setSorting = (field: 'name' | 'distance' | 'date' | undefined) => {
     const reversed = field === sortBy ? !reverseSortDirection : false;
@@ -199,7 +214,7 @@ export const Tires: FC = () => {
       ) : !tires || tires.length === 0 ? (
         <div className="mt-4">No tires added yet</div>
       ) : (
-        <Table className="mt-8">
+        <Table className="mt-4">
           <Table.Thead>
             <Table.Tr>
               <Th
@@ -232,6 +247,8 @@ export const Tires: FC = () => {
 
               const lastUsedString = lastUsedStint
                 ? lastUsedStint.date.toLocaleDateString() +
+                  ' ' +
+                  lastUsedStint.date.toLocaleTimeString() +
                   (lastUsedTrack ? ' at ' + lastUsedTrack : '')
                 : 'Never';
 

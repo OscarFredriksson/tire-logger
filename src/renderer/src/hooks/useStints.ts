@@ -14,8 +14,7 @@ interface UseStints {
 
 export const useStints = (props: UseStintsProps): UseStints => {
   const { data: stints, isLoading } = useQuery({
-    queryKey: ['stints'],
-    enabled: !!props?.carId,
+    queryKey: ['stints', props.carId],
     queryFn: () => window.api.getStints(props.carId!)
   });
 
