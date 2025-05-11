@@ -6,6 +6,8 @@ import {
   Group,
   Loader,
   Menu,
+  Pill,
+  PillGroup,
   Skeleton,
   Stack,
   Table,
@@ -33,6 +35,7 @@ import { useTracks } from '@renderer/hooks/useTracks';
 import { queryClient } from '@renderer/main';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TireFilters } from './TireFilters';
+import dayjs from 'dayjs';
 
 interface TireMenuProps {
   tireId: string;
@@ -227,14 +230,14 @@ export const Tires: FC = () => {
       </TitleWithButton>
       {loading ? (
         <Loader className="mt-8" />
-      ) : !tires || tires.length === 0 ? (
-        <div className="mt-4">No tires added yet</div>
       ) : (
         <Stack className="mt-4">
           <TireFilters
-            itemCount={tires.length}
+            itemCount={tires?.length || 0}
             shownItemCount={filteredTires !== undefined ? filteredTires.length : 0}
-            distMax={10}
+            distMax={
+              enrichedTires?.reduce((max, { distance }) => Math.max(max, distance / 1000), 0) || 0
+            }
             onFilterChange={setFilters}
           />
           <Card padding="xs">
@@ -248,6 +251,10 @@ export const Tires: FC = () => {
                   >
                     Name
                   </Th>
+                  <Th sorted={false} reversed={reverseSortDirection} onSort={() => {}}>
+                    Allowed positions
+                  </Th>
+
                   <Th
                     sorted={sortBy === 'distance'}
                     reversed={reverseSortDirection}
@@ -267,16 +274,17 @@ export const Tires: FC = () => {
               </Table.Thead>
               <Table.Tbody>
                 {(sortedTires || filteredTires)?.map(
-                  ({ tireId, name, distance, lastUsedStint }) => {
+                  ({
+                    tireId,
+                    name,
+                    distance,
+                    allowedLf,
+                    allowedLr,
+                    allowedRf,
+                    allowedRr,
+                    lastUsedStint
+                  }) => {
                     const lastUsedTrack = lastUsedStint && getTrack(lastUsedStint.trackId)?.name;
-
-                    const lastUsedString = lastUsedStint
-                      ? lastUsedStint.date.toLocaleDateString() +
-                        ' ' +
-                        lastUsedStint.date.toLocaleTimeString() +
-                        (lastUsedTrack ? ' at ' + lastUsedTrack : '')
-                      : 'Never';
-
                     return (
                       <Table.Tr
                         key={tireId}
@@ -285,11 +293,35 @@ export const Tires: FC = () => {
                         }
                         className="cursor-pointer"
                       >
-                        <Table.Td>{name}</Table.Td>
+                        <Table.Td w={200}>{name}</Table.Td>
+                        <Table.Td>
+                          <Group>
+                            <PillGroup size="sm" gap={2}>
+                              {allowedLf ? <Pill>LF</Pill> : null}
+                              {allowedRf ? <Pill>RF</Pill> : null}
+                              {allowedLr ? <Pill>LR</Pill> : null}
+                              {allowedRr ? <Pill>RR</Pill> : null}
+                            </PillGroup>
+                          </Group>
+                        </Table.Td>
                         <Table.Td>
                           {!loadingStints ? formatDistance(distance) : <Skeleton height={8} />}
                         </Table.Td>
-                        <Table.Td>{lastUsedString}</Table.Td>
+                        <Table.Td>
+                          {lastUsedStint ? (
+                            <>
+                              {dayjs(lastUsedStint.date).calendar(null, {
+                                sameDay: '[Today at] HH:mm',
+                                lastDay: '[Yesterday at] HH:mm',
+                                lastWeek: 'dddd [at] HH:mm',
+                                sameElse: 'MMM D, YYYY [at] HH:mm'
+                              })}
+                              {lastUsedTrack ? ` • ${lastUsedTrack}` : ''}
+                            </>
+                          ) : (
+                            'Never'
+                          )}
+                        </Table.Td>
                         <Table.Td
                           align="right"
                           className="p-0"
@@ -308,6 +340,15 @@ export const Tires: FC = () => {
                   }
                 )}
               </Table.Tbody>
+              {filteredTires?.length === 0 && (
+                <Table.Tfoot>
+                  <Text p={10} c="dimmed">
+                    {!tires || tires.length === 0
+                      ? 'No tires added yet'
+                      : 'No tires found with the current filters'}
+                  </Text>
+                </Table.Tfoot>
+              )}
             </Table>
           </Card>
         </Stack>
