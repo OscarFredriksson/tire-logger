@@ -8,6 +8,7 @@ import { useStints } from '@renderer/hooks/useStints';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TextWithLabel } from '../common/TextWithLabel';
+import { formatDate } from '@renderer/utils/dateUtils';
 
 export const Tire: FC = () => {
   const { carId, tireId } = useParams();
@@ -97,12 +98,13 @@ export const Tire: FC = () => {
                   <Table.Th>Position</Table.Th>
                   <Table.Th>Laps</Table.Th>
                   <Table.Th>Distance</Table.Th>
+                  <Table.Th>Stint notes</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {tireStints.map(({ stintId, trackId, date, laps, position }) => (
+                {tireStints.map(({ stintId, trackId, date, laps, position, note }) => (
                   <Table.Tr key={stintId}>
-                    <Table.Td>{date?.toLocaleDateString()}</Table.Td>
+                    <Table.Td>{formatDate(date)}</Table.Td>
                     <Table.Td>{getTrack(trackId)?.name || 'Unknown'}</Table.Td>
                     <Table.Td>{position}</Table.Td>
                     <Table.Td>{laps}</Table.Td>
@@ -113,6 +115,7 @@ export const Tire: FC = () => {
                         <Skeleton height={8} width="5rem" />
                       )}
                     </Table.Td>
+                    <Table.Td>{note}</Table.Td>
                   </Table.Tr>
                 ))}
               </Table.Tbody>

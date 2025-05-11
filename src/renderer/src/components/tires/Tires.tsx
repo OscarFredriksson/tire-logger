@@ -35,7 +35,7 @@ import { useTracks } from '@renderer/hooks/useTracks';
 import { queryClient } from '@renderer/main';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TireFilters } from './TireFilters';
-import dayjs from 'dayjs';
+import { formatDate } from '@renderer/utils/dateUtils';
 
 interface TireMenuProps {
   tireId: string;
@@ -310,12 +310,7 @@ export const Tires: FC = () => {
                         <Table.Td>
                           {lastUsedStint ? (
                             <>
-                              {dayjs(lastUsedStint.date).calendar(null, {
-                                sameDay: '[Today at] HH:mm',
-                                lastDay: '[Yesterday at] HH:mm',
-                                lastWeek: 'dddd [at] HH:mm',
-                                sameElse: 'MMM D, YYYY [at] HH:mm'
-                              })}
+                              {formatDate(lastUsedStint.date)}
                               {lastUsedTrack ? ` • ${lastUsedTrack}` : ''}
                             </>
                           ) : (
