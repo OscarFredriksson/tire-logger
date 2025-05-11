@@ -127,7 +127,7 @@ export const Stint: FC<StintProps> = ({ carId, stintId }) => {
   const save = () => {
     const stint = form.getValues();
     console.log('saving stint', { stint });
-    window.api.putStint({ ...stint, carId });
+    window.api.putStint({ ...stint, date: new Date(stint.date), carId });
     queryClient.invalidateQueries({ queryKey: ['stints'] });
     modals.closeAll();
   };
