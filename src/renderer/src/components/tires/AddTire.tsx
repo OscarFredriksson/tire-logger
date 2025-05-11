@@ -41,7 +41,7 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
 
   return (
     <>
-      <Title>Add Tire</Title>
+      <Title>{tireId ? 'Edit' : 'Add'} Tire</Title>
       <Stack className="mt-5">
         <TextInput label="Name" key={form.key('name')} {...form.getInputProps('name')} />
         <Text size="sm">Allowed tire positions</Text>
