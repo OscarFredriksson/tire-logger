@@ -12,7 +12,6 @@ interface UseTires {
 }
 
 export const useTires = (props: UseTiresProps): UseTires => {
-  console.log('useTires', props.carId);
   const { data: tires, isLoading } = useQuery({
     queryKey: ['tires', props.carId],
     queryFn: () => window.api.getTires(props.carId!)

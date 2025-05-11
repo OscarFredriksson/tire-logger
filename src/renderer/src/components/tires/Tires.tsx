@@ -1,18 +1,17 @@
 import {
   ActionIcon,
+  Card,
   Center,
+  Flex,
   Group,
   Loader,
   Menu,
   Skeleton,
   Stack,
   Table,
-  Text,
-  Tooltip,
-  UnstyledButton
+  Text
 } from '@mantine/core';
 import {
-  IconArrowRight,
   IconChevronDown,
   IconChevronUp,
   IconDotsVertical,
@@ -21,21 +20,19 @@ import {
   IconSelector,
   IconTrash
 } from '@tabler/icons-react';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { modals } from '@mantine/modals';
 import { AddTire, AddTireProps } from './AddTire';
 import { useTires } from '@renderer/hooks/useTires';
-import { TitleWithButton } from './common/TitleWithButton';
+import { TitleWithButton } from '../common/TitleWithButton';
 import { useStints } from '@renderer/hooks/useStints';
 import { Stint, Tire } from '@shared/model';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { queryClient } from '@renderer/main';
-import { themeConstants } from '@renderer/theme';
 import { formatDistance } from '@renderer/utils/distanceUtils';
-
-// TODO: sortable table
+import { TireFilters } from './TireFilters';
 
 interface TireMenuProps {
   tireId: string;
@@ -107,17 +104,18 @@ interface ThProps {
 const Th: FC<ThProps> = ({ children, reversed, sorted, onSort }) => {
   const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
   return (
-    <Table.Th className="p-0">
-      <UnstyledButton onClick={onSort} className="control">
-        <Group justify="space-between">
-          <Text fw={500} fz="sm">
-            {children}
-          </Text>
-          <Center className="icon">
-            <Icon size={16} stroke={1.5} />
-          </Center>
-        </Group>
-      </UnstyledButton>
+    <Table.Th
+      className="p-0 cursor-pointer hover:bg-[var(--mantine-color-dark-4)]"
+      onClick={onSort}
+    >
+      <Group>
+        <Text fw={500} fz="sm">
+          {children}
+        </Text>
+        <Center className="icon">
+          <Icon size={16} stroke={1.5} />
+        </Center>
+      </Group>
     </Table.Th>
   );
 };
@@ -157,7 +155,7 @@ export const Tires: FC = () => {
     });
   };
 
-  console.log('Tires', tires);
+  const [filters, setFilters] = useState<TireFilters>();
 
   const enrichedTires = useMemo(
     () =>
@@ -183,21 +181,39 @@ export const Tires: FC = () => {
     [tires, getTireStints, getTrack]
   );
 
+  const filteredTires = useMemo(() => {
+    const { tirePosition, nameSearch, totalDistance } = filters || {};
+
+    if (!tirePosition && !nameSearch && !totalDistance) return enrichedTires;
+
+    return enrichedTires?.filter(
+      ({ allowedLf, allowedRf, allowedLr, allowedRr, distance, name }) => {
+        if (nameSearch && !name.toLowerCase().includes(nameSearch.toLowerCase())) return false;
+
+        if (
+          totalDistance &&
+          (distance < totalDistance[0] * 1000 || distance > totalDistance[1] * 1000)
+        )
+          return false;
+
+        if (tirePosition?.includes('Left') && !allowedLf && !allowedLr) return false;
+        if (tirePosition?.includes('Right') && !allowedRf && !allowedRr) return false;
+        if (tirePosition?.includes('Front') && !allowedLf && !allowedRf) return false;
+        if (tirePosition?.includes('Rear') && !allowedLr && !allowedRr) return false;
+        return true;
+      }
+    );
+  }, [enrichedTires, filters]);
+
   const [sortBy, setSortBy] = useState<'name' | 'distance' | 'date' | undefined>(undefined);
   const [reverseSortDirection, setReverseSortDirection] = useState(false);
-  const [sortedData, setSortedData] = useState(enrichedTires);
-
-  useEffect(() => {
-    console.log('setting enrichedTires', enrichedTires);
-    setSortedData(enrichedTires);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tires]);
+  const [sortedTires, setSortedTires] = useState<typeof filteredTires>();
 
   const setSorting = (field: 'name' | 'distance' | 'date' | undefined) => {
     const reversed = field === sortBy ? !reverseSortDirection : false;
     setReverseSortDirection(reversed);
     setSortBy(field);
-    setSortedData(sortData(enrichedTires || [], field, reversed));
+    setSortedTires(sortData(filteredTires || [], field, reversed));
   };
 
   return (
@@ -214,73 +230,87 @@ export const Tires: FC = () => {
       ) : !tires || tires.length === 0 ? (
         <div className="mt-4">No tires added yet</div>
       ) : (
-        <Table className="mt-4">
-          <Table.Thead>
-            <Table.Tr>
-              <Th
-                sorted={sortBy === 'name'}
-                reversed={reverseSortDirection}
-                onSort={() => setSorting('name')}
-              >
-                Name
-              </Th>
-              <Th
-                sorted={sortBy === 'distance'}
-                reversed={reverseSortDirection}
-                onSort={() => setSorting('distance')}
-              >
-                Total distance
-              </Th>
-              <Th
-                sorted={sortBy === 'date'}
-                reversed={reverseSortDirection}
-                onSort={() => setSorting('date')}
-              >
-                Last used
-              </Th>
-              <Table.Th></Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {sortedData?.map(({ tireId, name, distance, lastUsedStint }) => {
-              const lastUsedTrack = lastUsedStint && getTrack(lastUsedStint.trackId)?.name;
-
-              const lastUsedString = lastUsedStint
-                ? lastUsedStint.date.toLocaleDateString() +
-                  ' ' +
-                  lastUsedStint.date.toLocaleTimeString() +
-                  (lastUsedTrack ? ' at ' + lastUsedTrack : '')
-                : 'Never';
-
-              return (
-                <Table.Tr key={tireId}>
-                  <Table.Td>{name}</Table.Td>
-                  <Table.Td>
-                    {!loadingStints ? formatDistance(distance) : <Skeleton height={8} />}
-                  </Table.Td>
-                  <Table.Td>{lastUsedString}</Table.Td>
-                  <Table.Td align="right">
-                    <TireMenu tireId={tireId} tireName={name} openTireModal={openTireModal} />
-                    <Tooltip
-                      withArrow
-                      label="Go to tire"
-                      openDelay={themeConstants.TOOLTIP_OPEN_DELAY}
-                    >
-                      <ActionIcon size="md" variant="gradient">
-                        <IconArrowRight
-                          size={20}
-                          onClick={() =>
-                            navigate(generatePath(routes.TIRE_tireId, { carId, tireId }))
-                          }
-                        />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Table.Td>
+        <Stack className="mt-4">
+          <TireFilters
+            itemCount={tires.length}
+            shownItemCount={filteredTires !== undefined ? filteredTires.length : 0}
+            distMax={10}
+            onFilterChange={setFilters}
+          />
+          <Card padding="xs">
+            <Table className="p-0 m-0" highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Th
+                    sorted={sortBy === 'name'}
+                    reversed={reverseSortDirection}
+                    onSort={() => setSorting('name')}
+                  >
+                    Name
+                  </Th>
+                  <Th
+                    sorted={sortBy === 'distance'}
+                    reversed={reverseSortDirection}
+                    onSort={() => setSorting('distance')}
+                  >
+                    Total distance
+                  </Th>
+                  <Th
+                    sorted={sortBy === 'date'}
+                    reversed={reverseSortDirection}
+                    onSort={() => setSorting('date')}
+                  >
+                    Last used
+                  </Th>
+                  <Table.Th className="w-0"></Table.Th>
                 </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {(sortedTires || filteredTires)?.map(
+                  ({ tireId, name, distance, lastUsedStint }) => {
+                    const lastUsedTrack = lastUsedStint && getTrack(lastUsedStint.trackId)?.name;
+
+                    const lastUsedString = lastUsedStint
+                      ? lastUsedStint.date.toLocaleDateString() +
+                        ' ' +
+                        lastUsedStint.date.toLocaleTimeString() +
+                        (lastUsedTrack ? ' at ' + lastUsedTrack : '')
+                      : 'Never';
+
+                    return (
+                      <Table.Tr
+                        key={tireId}
+                        onClick={() =>
+                          navigate(generatePath(routes.TIRE_tireId, { carId, tireId }))
+                        }
+                        className="cursor-pointer"
+                      >
+                        <Table.Td>{name}</Table.Td>
+                        <Table.Td>
+                          {!loadingStints ? formatDistance(distance) : <Skeleton height={8} />}
+                        </Table.Td>
+                        <Table.Td>{lastUsedString}</Table.Td>
+                        <Table.Td
+                          align="right"
+                          className="p-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Flex justify="flex-end">
+                            <TireMenu
+                              tireId={tireId}
+                              tireName={name}
+                              openTireModal={openTireModal}
+                            />
+                          </Flex>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  }
+                )}
+              </Table.Tbody>
+            </Table>
+          </Card>
+        </Stack>
       )}
     </>
   );

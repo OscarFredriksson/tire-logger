@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router';
-import { Tires } from './components/Tires';
-import { Tire } from './components/Tire';
+import { Tires } from './components/tires/Tires';
 import { Header } from './components/Header';
 import { routes } from './routes';
 import { Stints } from './components/Stints';
@@ -8,6 +7,7 @@ import { FC } from 'react';
 import { Tracks } from './components/Tracks';
 import { ScrollAreaAutosize } from '@mantine/core';
 import { Cars } from './components/Cars';
+import { Tire } from './components/tires/Tire';
 
 export const App: FC = () => {
   return (

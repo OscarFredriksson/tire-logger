@@ -7,7 +7,7 @@ import { useTires } from '@renderer/hooks/useTires';
 import { useStints } from '@renderer/hooks/useStints';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { formatDistance } from '@renderer/utils/distanceUtils';
-import { TextWithLabel } from './common/TextWithLabel';
+import { TextWithLabel } from '../common/TextWithLabel';
 
 export const Tire: FC = () => {
   const { carId, tireId } = useParams();
