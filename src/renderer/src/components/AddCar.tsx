@@ -1,6 +1,7 @@
 import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
+import { useCars } from '@renderer/hooks/useCars';
 import { queryClient } from '@renderer/main';
 import { FC } from 'react';
 
@@ -13,6 +14,8 @@ interface CarForm {
 }
 
 export const AddCar: FC<AddCarProps> = ({ carId }) => {
+  const { loading, getCar } = useCars();
+
   const form = useForm<CarForm>({
     mode: 'uncontrolled'
   });
@@ -20,13 +23,13 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
   if (!form.initialized) {
     if (!carId) {
       form.initialize({});
-    } else {
-      // const car = getCar(carId);
-      // if (car) {
-      //   form.initialize(car);
-      // } else {
-      //   throw new Error(`Car with id ${carId} not found`);
-      // }
+    } else if (!loading) {
+      const car = getCar(carId);
+      if (car) {
+        form.initialize(car);
+      } else {
+        throw new Error(`Car with id ${carId} not found`);
+      }
     }
   }
 
