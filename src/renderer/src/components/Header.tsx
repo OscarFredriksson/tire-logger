@@ -60,14 +60,14 @@ export const Header: FC = () => {
         <HeaderTab
           route={selectedCar ? generatePath(routes.STINTS, { carId: selectedCar }) : '/'}
           disabled={!selectedCar}
-          disabledTooltip="Please select a car"
+          disabledTooltip="Select a car first"
         >
           Stints
         </HeaderTab>
         <HeaderTab
           route={selectedCar ? generatePath(routes.TIRES, { carId: selectedCar }) : '/'}
           disabled={!selectedCar}
-          disabledTooltip="Please select a car"
+          disabledTooltip="Select a car first"
         >
           Tires
         </HeaderTab>
