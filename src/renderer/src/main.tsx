@@ -8,10 +8,6 @@ import { App } from './App';
 import { HashRouter, Route, Routes } from 'react-router';
 import { ModalsProvider } from '@mantine/modals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import dayjs from 'dayjs';
-import calendar from 'dayjs/plugin/calendar';
-
-dayjs.extend(calendar);
 
 export const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } }

@@ -1,4 +1,7 @@
 import dayjs from 'dayjs';
+import calendar from 'dayjs/plugin/calendar';
+
+dayjs.extend(calendar);
 
 export const formatDate = (date: Date): string =>
   dayjs(date).calendar(null, {
