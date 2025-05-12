@@ -283,7 +283,7 @@ export const Tire: FC = () => {
                         </Table.Td>
                         <Table.Td>{laps}</Table.Td>
                         <Table.Td>{formatDistance(distance)}</Table.Td>
-                        <Table.Td>{note}</Table.Td>
+                        <Table.Td maw={250}>{note}</Table.Td>
                       </Table.Tr>
                     )
                   )}
