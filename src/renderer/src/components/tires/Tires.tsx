@@ -1,27 +1,16 @@
 import {
   ActionIcon,
   Card,
-  Center,
   Flex,
-  Group,
   Loader,
   Menu,
-  Pill,
   PillGroup,
   Skeleton,
   Stack,
   Table,
   Text
 } from '@mantine/core';
-import {
-  IconChevronDown,
-  IconChevronUp,
-  IconDotsVertical,
-  IconEdit,
-  IconPlus,
-  IconSelector,
-  IconTrash
-} from '@tabler/icons-react';
+import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
@@ -32,10 +21,11 @@ import { TitleWithButton } from '../common/TitleWithButton';
 import { useStints } from '@renderer/hooks/useStints';
 import { Stint, Tire } from '@shared/model';
 import { useTracks } from '@renderer/hooks/useTracks';
-import { queryClient } from '@renderer/main';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TireFilters } from './TireFilters';
 import { formatDate } from '@renderer/utils/dateUtils';
+import { ThSortable } from '../common/ThSortable';
+import { PillWithTooltip } from '../common/PillWithTooltip';
 
 interface TireMenuProps {
   tireId: string;
@@ -44,7 +34,10 @@ interface TireMenuProps {
 }
 
 const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
+  const navigate = useNavigate();
+
   const { carId } = useParams();
+  const { deleteTire } = useTires({ carId });
   const [opened, setOpened] = useState<boolean>(false);
 
   const onDelete = () => {
@@ -64,15 +57,12 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
       withCloseButton: false,
-      onConfirm: () => onConfirmDelete(),
+      onConfirm: () => {
+        deleteTire(tireId);
+        navigate(generatePath(routes.TIRES, { carId }));
+      },
       onAbort: () => modals.closeAll()
     });
-  };
-
-  const onConfirmDelete = () => {
-    window.api.deleteTire(tireId);
-    queryClient.invalidateQueries({ queryKey: ['tires', carId] });
-    modals.closeAll();
   };
 
   return (
@@ -95,31 +85,6 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
-  );
-};
-interface ThProps {
-  children: React.ReactNode;
-  reversed: boolean;
-  sorted: boolean;
-  onSort: () => void;
-}
-
-const Th: FC<ThProps> = ({ children, reversed, sorted, onSort }) => {
-  const Icon = sorted ? (reversed ? IconChevronUp : IconChevronDown) : IconSelector;
-  return (
-    <Table.Th
-      className="p-0 cursor-pointer hover:bg-[var(--mantine-color-dark-4)]"
-      onClick={onSort}
-    >
-      <Group>
-        <Text fw={500} fz="sm">
-          {children}
-        </Text>
-        <Center className="icon">
-          <Icon size={16} stroke={1.5} />
-        </Center>
-      </Group>
-    </Table.Th>
   );
 };
 
@@ -246,31 +211,31 @@ export const Tires: FC = () => {
             <Table className="p-0 m-0" highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Th
+                  <ThSortable
                     sorted={sortBy === 'name'}
                     reversed={reverseSortDirection}
                     onSort={() => setSorting('name')}
                   >
                     Name
-                  </Th>
-                  <Th sorted={false} reversed={reverseSortDirection} onSort={() => {}}>
+                  </ThSortable>
+                  <ThSortable sorted={false} reversed={reverseSortDirection} onSort={() => {}}>
                     Allowed positions
-                  </Th>
+                  </ThSortable>
 
-                  <Th
+                  <ThSortable
                     sorted={sortBy === 'distance'}
                     reversed={reverseSortDirection}
                     onSort={() => setSorting('distance')}
                   >
-                    Total distance
-                  </Th>
-                  <Th
+                    Distance
+                  </ThSortable>
+                  <ThSortable
                     sorted={sortBy === 'date'}
                     reversed={reverseSortDirection}
                     onSort={() => setSorting('date')}
                   >
                     Last used
-                  </Th>
+                  </ThSortable>
                   <Table.Th className="w-0"></Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -297,14 +262,20 @@ export const Tires: FC = () => {
                       >
                         <Table.Td w={200}>{name}</Table.Td>
                         <Table.Td>
-                          <Group>
-                            <PillGroup size="sm" gap={2}>
-                              {allowedLf ? <Pill>LF</Pill> : null}
-                              {allowedRf ? <Pill>RF</Pill> : null}
-                              {allowedLr ? <Pill>LR</Pill> : null}
-                              {allowedRr ? <Pill>RR</Pill> : null}
-                            </PillGroup>
-                          </Group>
+                          <PillGroup size="sm" gap={2}>
+                            {allowedLf ? (
+                              <PillWithTooltip tip="Left Front">LF</PillWithTooltip>
+                            ) : null}
+                            {allowedRf ? (
+                              <PillWithTooltip tip="Right Front">RF</PillWithTooltip>
+                            ) : null}
+                            {allowedLr ? (
+                              <PillWithTooltip tip="Left Rear">LR</PillWithTooltip>
+                            ) : null}
+                            {allowedRr ? (
+                              <PillWithTooltip tip="Right Rear">RR</PillWithTooltip>
+                            ) : null}
+                          </PillGroup>
                         </Table.Td>
                         <Table.Td>
                           {!loadingStints ? formatDistance(distance) : <Skeleton height={8} />}
