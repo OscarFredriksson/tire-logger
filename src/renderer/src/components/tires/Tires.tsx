@@ -162,26 +162,28 @@ export const Tires: FC = () => {
 
   const enrichedTires = useMemo(
     () =>
-      tires?.map((tire) => {
-        const tireStints = getTireStints(tire.tireId);
+      loadingStints
+        ? undefined
+        : tires?.map((tire) => {
+            const tireStints = getTireStints(tire.tireId);
 
-        const lastUsedStint = tireStints?.reduce(
-          (latest, stint) => {
-            if (!latest || stint.date > latest.date) {
-              return stint;
-            }
-            return latest;
-          },
-          undefined as Stint | undefined
-        );
-        const distance = tireStints.reduce(
-          (total, { laps, trackId }) => total + laps * (getTrack(trackId)?.length || 0),
-          0
-        );
+            const lastUsedStint = tireStints?.reduce(
+              (latest, stint) => {
+                if (!latest || stint.date > latest.date) {
+                  return stint;
+                }
+                return latest;
+              },
+              undefined as Stint | undefined
+            );
+            const distance = tireStints.reduce(
+              (total, { laps, trackId }) => total + laps * (getTrack(trackId)?.length || 0),
+              0
+            );
 
-        return { ...tire, distance, lastUsedStint };
-      }),
-    [tires, getTireStints, getTrack]
+            return { ...tire, distance, lastUsedStint };
+          }),
+    [tires, loadingStints, getTireStints, getTrack]
   );
 
   const filteredTires = useMemo(() => {
@@ -189,23 +191,23 @@ export const Tires: FC = () => {
 
     if (!tirePosition && !nameSearch && !totalDistance) return enrichedTires;
 
-    return enrichedTires?.filter(
-      ({ allowedLf, allowedRf, allowedLr, allowedRr, distance, name }) => {
-        if (nameSearch && !name.toLowerCase().includes(nameSearch.toLowerCase())) return false;
+    return !enrichedTires
+      ? undefined
+      : enrichedTires.filter(({ allowedLf, allowedRf, allowedLr, allowedRr, distance, name }) => {
+          if (nameSearch && !name.toLowerCase().includes(nameSearch.toLowerCase())) return false;
 
-        if (
-          totalDistance &&
-          (distance < totalDistance[0] * 1000 || distance > totalDistance[1] * 1000)
-        )
-          return false;
+          if (
+            totalDistance &&
+            (distance < totalDistance[0] * 1000 || distance > totalDistance[1] * 1000)
+          )
+            return false;
 
-        if (tirePosition?.includes('Left') && !allowedLf && !allowedLr) return false;
-        if (tirePosition?.includes('Right') && !allowedRf && !allowedRr) return false;
-        if (tirePosition?.includes('Front') && !allowedLf && !allowedRf) return false;
-        if (tirePosition?.includes('Rear') && !allowedLr && !allowedRr) return false;
-        return true;
-      }
-    );
+          if (tirePosition?.includes('Left') && !allowedLf && !allowedLr) return false;
+          if (tirePosition?.includes('Right') && !allowedRf && !allowedRr) return false;
+          if (tirePosition?.includes('Front') && !allowedLf && !allowedRf) return false;
+          if (tirePosition?.includes('Rear') && !allowedLr && !allowedRr) return false;
+          return true;
+        });
   }, [enrichedTires, filters]);
 
   const [sortBy, setSortBy] = useState<'name' | 'distance' | 'date' | undefined>(undefined);
@@ -228,7 +230,7 @@ export const Tires: FC = () => {
       >
         Tires
       </TitleWithButton>
-      {loading ? (
+      {loading || filteredTires === undefined || enrichedTires === undefined ? (
         <Loader className="mt-8" />
       ) : (
         <Stack className="mt-4">
