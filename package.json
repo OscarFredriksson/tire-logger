@@ -1,6 +1,6 @@
 {
   "name": "tire-logger",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "Tire logger",
   "main": "./out/main/index.js",
   "author": "oscar@famfredriksson.com",
