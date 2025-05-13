@@ -43,12 +43,8 @@ publish:
   owner: OscarFredriksson
   repo: tire-logger
   releaseType: draft
-  # Set to true if you want updates to be published automatically
-  # Set to false if you want to review before publishing
-  publishAutoUpdate: false
-  # Controls which channel to use ('latest' is standard)
+  publishAutoUpdate: true
   channel: latest
-  # Optional token if you need authentication (for private repos)
-  token: ${GITHUB_TOKEN}
+  private: false
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

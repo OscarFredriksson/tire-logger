@@ -1,6 +1,6 @@
 {
   "name": "tire-logger",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Tire logger",
   "main": "./out/main/index.js",
   "author": "oscar@famfredriksson.com",
@@ -66,6 +66,7 @@
     "@tanstack/react-query": "^5.74.4",
     "better-sqlite3": "^11.9.1",
     "dayjs": "^1.11.13",
+    "electron-log": "^5.4.0",
     "electron-updater": "^6.6.2",
     "react-router": "^7.6.0",
     "tailwindcss": "^4.0.12",

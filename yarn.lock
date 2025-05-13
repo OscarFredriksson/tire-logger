@@ -3000,6 +3000,11 @@ electron-builder@^25.1.8:
     simple-update-notifier "2.0.0"
     yargs "^17.6.2"
 
+electron-log@^5.4.0:
+  version "5.4.0"
+  resolved "https://cpa-358107645737.d.codeartifact.eu-west-1.amazonaws.com/npm/cpa-libs/electron-log/-/electron-log-5.4.0.tgz#3180bf5194b2e2efacb62ec1392f8150faf4de6b"
+  integrity sha512-AXI5OVppskrWxEAmCxuv8ovX+s2Br39CpCAgkGMNHQtjYT3IiVbSQTncEjFVGPgoH35ZygRm/mvUMBDWwhRxgg==
+
 electron-publish@25.1.7:
   version "25.1.7"
   resolved "https://registry.yarnpkg.com/electron-publish/-/electron-publish-25.1.7.tgz#14e50c2a3fafdc1c454eadbbc47ead89a48bb554"
