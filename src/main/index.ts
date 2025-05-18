@@ -7,9 +7,6 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
 
 autoUpdater.logger = log;
-autoUpdater.checkForUpdatesAndNotify().then((updateCheckResult) => {
-  log.info('Update check result:', updateCheckResult);
-});
 
 autoUpdater.on('update-available', () => {
   dialog
@@ -23,6 +20,25 @@ autoUpdater.on('update-available', () => {
 });
 
 function createWindow(): void {
+  const splash = new BrowserWindow({
+    icon,
+    transparent: true,
+    frame: false,
+    height: 300,
+    width: 500,
+    webPreferences: {
+      preload: join(__dirname, '../preload/splash.js'),
+      sandbox: false
+    }
+  });
+
+  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+    splash.loadURL(process.env.ELECTRON_RENDERER_URL + '/splash.html');
+  } else {
+    splash.loadFile(join(__dirname, '../renderer/splash.html'));
+  }
+  splash.center();
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1000,
@@ -37,6 +53,8 @@ function createWindow(): void {
   });
 
   mainWindow.on('ready-to-show', () => {
+    if (is.dev) splash.hide();
+    else splash.close();
     mainWindow.show();
   });
 
@@ -48,7 +66,7 @@ function createWindow(): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
+    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL + '/index.html');
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
@@ -72,12 +90,6 @@ app.whenReady().then(() => {
   handlers.forEach((handler) => ipcMain.handle(handler.name, handler));
 
   createWindow();
-
-  app.on('activate', () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
 });
 
 app.on('window-all-closed', () => app.quit());
