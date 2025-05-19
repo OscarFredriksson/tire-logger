@@ -29,41 +29,13 @@ import { PillWithTooltip } from '../common/PillWithTooltip';
 
 interface TireMenuProps {
   tireId: string;
-  tireName: string;
   openTireModal: (props?: AddTireProps) => void;
 }
 
-const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
-  const navigate = useNavigate();
-
+const TireMenu: FC<TireMenuProps> = ({ tireId, openTireModal }) => {
   const { carId } = useParams();
   const { deleteTire } = useTires({ carId });
   const [opened, setOpened] = useState<boolean>(false);
-
-  const onDelete = () => {
-    modals.openConfirmModal({
-      title: 'Delete tire',
-      children: (
-        <Stack justify="center">
-          <Text>
-            Are you sure you want to delete the tire{' '}
-            <Text span fw={800} inherit>
-              {tireName}
-            </Text>
-            ?
-          </Text>
-          <Text c="red">This will also delete all stints where this tire is used.</Text>
-        </Stack>
-      ),
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      withCloseButton: false,
-      onConfirm: () => {
-        deleteTire(tireId);
-        navigate(generatePath(routes.TIRES, { carId }));
-      },
-      onAbort: () => modals.closeAll()
-    });
-  };
 
   return (
     <Menu opened={opened} onChange={setOpened}>
@@ -80,7 +52,11 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, tireName, openTireModal }) => {
         >
           Edit tire
         </Menu.Item>
-        <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+        <Menu.Item
+          color="red"
+          leftSection={<IconTrash size={14} />}
+          onClick={() => deleteTire(tireId)}
+        >
           Delete tire
         </Menu.Item>
       </Menu.Dropdown>
@@ -296,11 +272,7 @@ export const Tires: FC = () => {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Flex justify="flex-end">
-                            <TireMenu
-                              tireId={tireId}
-                              tireName={name}
-                              openTireModal={openTireModal}
-                            />
+                            <TireMenu tireId={tireId} openTireModal={openTireModal} />
                           </Flex>
                         </Table.Td>
                       </Table.Tr>
@@ -309,13 +281,13 @@ export const Tires: FC = () => {
                 )}
               </Table.Tbody>
               {filteredTires?.length === 0 && (
-                <Table.Tfoot>
+                <Table.Caption>
                   <Text p={10} c="dimmed">
                     {!tires || tires.length === 0
                       ? 'No tires added yet'
                       : 'No tires found with the current filters'}
                   </Text>
-                </Table.Tfoot>
+                </Table.Caption>
               )}
             </Table>
           </Card>

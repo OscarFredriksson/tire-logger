@@ -27,7 +27,6 @@ import { formatDate } from '@renderer/utils/dateUtils';
 import { ThSortable } from '../common/ThSortable';
 import { themeConstants } from '@renderer/theme';
 import { modals } from '@mantine/modals';
-import { DeleteTireConfirm } from './DeleteTireConfirm';
 import { AddTireProps, AddTire } from './AddTire';
 
 const sortData = (data: any[], sortBy: string | undefined, reversed: boolean) => {
@@ -87,21 +86,6 @@ export const Tire: FC = () => {
     setSortedStints(sortData(enrichedStints || [], field, reversed));
   };
 
-  const onDeleteTire = () => {
-    if (tire)
-      modals.openConfirmModal({
-        title: 'Delete tire',
-        children: <DeleteTireConfirm tireName={tire.name} />,
-        labels: { confirm: 'Delete', cancel: 'Cancel' },
-        withCloseButton: false,
-        onConfirm: () => {
-          deleteTire(tire.tireId);
-          navigate(generatePath(routes.TIRES, { carId }));
-        },
-        onAbort: () => modals.closeAll()
-      });
-  };
-
   const openTireModal = (props?: AddTireProps) => {
     modals.open({
       children: <AddTire {...props} carId={carId!} />,
@@ -131,7 +115,12 @@ export const Tire: FC = () => {
               </ActionIcon>
             </Tooltip>
             <Tooltip label="Delete tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
-              <ActionIcon variant="filled" color="red" size="lg" onClick={onDeleteTire}>
+              <ActionIcon
+                variant="filled"
+                color="red"
+                size="lg"
+                onClick={() => deleteTire(tire.tireId)}
+              >
                 <IconTrash size={22} />
               </ActionIcon>
             </Tooltip>
@@ -289,11 +278,11 @@ export const Tire: FC = () => {
                   )}
                 </Table.Tbody>
                 {tireStints?.length === 0 && (
-                  <Table.Tfoot>
+                  <Table.Caption>
                     <Text p={10} c="dimmed">
                       No stints added yet
                     </Text>
-                  </Table.Tfoot>
+                  </Table.Caption>
                 )}
               </Table>
             </Card>
