@@ -19,14 +19,14 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <MantineProvider defaultColorScheme="dark">
-        <ModalsProvider>
-          <Notifications />
-          <HashRouter>
+        <Notifications />
+        <HashRouter>
+          <ModalsProvider>
             <Routes>
               <Route path="*" element={<App />} />
             </Routes>
-          </HashRouter>
-        </ModalsProvider>
+          </ModalsProvider>
+        </HashRouter>
       </MantineProvider>
     </QueryClientProvider>
   </StrictMode>

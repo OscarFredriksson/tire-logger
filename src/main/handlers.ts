@@ -18,8 +18,7 @@ import {
   updateTire,
   updateTrack
 } from './db';
-
-// TODO: delete stint
+import { tireSchema } from '../shared/schema/tireSchema';
 
 const getTracks = (): Track[] => {
   return queryTracks.all();
@@ -80,43 +79,45 @@ const getStints = (_, carId: string) => {
   }));
 };
 
-const getTires = (_, carId: string) => {
-  console.log('getTires', carId);
-  const tires = queryTires.all(carId);
-  console.log('Tires', tires);
-  return tires;
-};
+const getTires = (_, carId: string) => queryTires.all(carId);
 
 const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
+  const { tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr } = tire;
   console.log('putTire', tire);
 
-  if (tire.tireId) {
-    console.log('Updating tire', tire.tireId);
+  try {
+    tireSchema.parse(tire);
+  } catch (e) {
+    console.log('Error validating tire', e);
+    throw new Error('Validation of tire schema failed');
+  }
+
+  if (tireId) {
+    console.log('Updating tire', tireId);
     updateTire.run(
-      tire.name,
-      tire.allowedLf ? 1 : 0,
-      tire.allowedRf ? 1 : 0,
-      tire.allowedLr ? 1 : 0,
-      tire.allowedRr ? 1 : 0,
-      tire.tireId
+      name,
+      allowedLf ? 1 : 0,
+      allowedRf ? 1 : 0,
+      allowedLr ? 1 : 0,
+      allowedRr ? 1 : 0,
+      tireId
     );
   } else {
-    console.log('Inserting tire', tire.name);
+    console.log('Inserting tire', name);
     insertTire.run(
       randomUUID(),
-      tire.name,
-      tire.carId,
-      tire.allowedLf ? 1 : 0, // TODO: generalize this convertion
-      tire.allowedRf ? 1 : 0,
-      tire.allowedLr ? 1 : 0,
-      tire.allowedRr ? 1 : 0
+      name,
+      carId,
+      allowedLf ? 1 : 0,
+      allowedRf ? 1 : 0,
+      allowedLr ? 1 : 0,
+      allowedRr ? 1 : 0
     );
   }
 };
 
-const getCars = () => {
-  return queryCars.all();
-};
+const getCars = () => queryCars.all();
+
 const putCar = (_, car: PartialValue<Car, 'carId'>) => {
   console.log('putCar', car);
 

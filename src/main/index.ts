@@ -7,6 +7,9 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
 
 autoUpdater.logger = log;
+autoUpdater.checkForUpdatesAndNotify().then((updateCheckResult) => {
+  log.info('Update check result:', updateCheckResult);
+});
 
 autoUpdater.on('update-available', () => {
   dialog

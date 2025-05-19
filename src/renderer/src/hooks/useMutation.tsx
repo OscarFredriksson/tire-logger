@@ -16,6 +16,10 @@ interface UseMutationProps<TData, TError, TVariables, TContext>
   queryKey?: (string | undefined)[];
 }
 
+const capitalizeFirstLetter = (val: string) => {
+  return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+};
+
 export const useMutation = <
   TData = unknown,
   TError = DefaultError,
@@ -40,7 +44,7 @@ export const useMutation = <
       modals.closeAll();
       notifications.show({
         color: 'teal',
-        message: `Succesfully ${operationType}d ${entityName}`,
+        message: `${capitalizeFirstLetter(operationType)}d ${entityName}`,
         icon: <IconCheck size={18} />,
         loading: false,
         autoClose: 2000,
