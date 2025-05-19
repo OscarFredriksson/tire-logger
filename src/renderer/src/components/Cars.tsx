@@ -1,7 +1,24 @@
-import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
+import {
+  IconDotsVertical,
+  IconEdit,
+  IconInfoCircle,
+  IconPlus,
+  IconTrash
+} from '@tabler/icons-react';
 import { TitleWithButton } from './common/TitleWithButton';
 import { useCars } from '@renderer/hooks/useCars';
-import { ActionIcon, Card, Flex, Group, Loader, Menu, Stack, Text, Title } from '@mantine/core';
+import {
+  ActionIcon,
+  Alert,
+  Card,
+  Flex,
+  Group,
+  Loader,
+  Menu,
+  Stack,
+  Text,
+  Title
+} from '@mantine/core';
 import { AddCar, AddCarProps } from './AddCar';
 import { modals } from '@mantine/modals';
 import { queryClient } from '@renderer/main';
@@ -28,7 +45,9 @@ const CarMenu: FC<CarMenuProps> = ({ carId, carName, openCarModal }) => {
             </Text>
             ?
           </Text>
-          <Text c="red">This will also delete all tires and stints for this car.</Text>
+          <Alert variant="light" color="red" icon={<IconInfoCircle />}>
+            This will also delete all tires and stints for this car.
+          </Alert>
         </Stack>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },

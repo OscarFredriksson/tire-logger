@@ -1,8 +1,25 @@
 import { FC, useState } from 'react';
 import { TitleWithButton } from './common/TitleWithButton';
-import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
+import {
+  IconDotsVertical,
+  IconEdit,
+  IconInfoCircle,
+  IconPlus,
+  IconTrash
+} from '@tabler/icons-react';
 import { useTracks } from '@renderer/hooks/useTracks';
-import { ActionIcon, Card, Flex, Group, Loader, Menu, Stack, Text, Title } from '@mantine/core';
+import {
+  ActionIcon,
+  Alert,
+  Card,
+  Flex,
+  Group,
+  Loader,
+  Menu,
+  Stack,
+  Text,
+  Title
+} from '@mantine/core';
 import { AddTrack, AddTrackProps } from './AddTrack';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
@@ -30,7 +47,9 @@ const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal }) =
             ?
           </Text>
 
-          <Text c="red">This will also delete all stints where this track is used.</Text>
+          <Alert variant="light" color="red" icon={<IconInfoCircle />}>
+            This will also delete all stints where this track is used.
+          </Alert>
         </Stack>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
