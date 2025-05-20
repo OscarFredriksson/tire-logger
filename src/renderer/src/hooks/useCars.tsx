@@ -36,7 +36,7 @@ export const useCars = (): UseCars => {
   const { showBoundary } = useErrorBoundary();
 
   const deleteCar = (carId: string) => {
-    const car = getCar(carId + '123');
+    const car = getCar(carId);
 
     if (!car) {
       showBoundary(new Error(`Car with id ${carId} not found`));
