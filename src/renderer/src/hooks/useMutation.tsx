@@ -44,10 +44,12 @@ export const useMutation = <
       modals.closeAll();
       notifications.show({
         color: 'teal',
+        radius: 'lg',
         message: `${capitalizeFirstLetter(operationType)}d ${entityName}`,
         icon: <IconCheck size={18} />,
         loading: false,
         autoClose: 2000,
+        withBorder: true,
         withCloseButton: false
       });
       queryClient.invalidateQueries({ queryKey });
@@ -57,11 +59,13 @@ export const useMutation = <
       console.log('onError called with:', error);
       notifications.show({
         color: 'red',
+        radius: 'lg',
         title: `Error ${operationType?.slice(0, -1)}ing ${entityName}`,
         message: error instanceof Error ? error?.message : 'An unexpected error occurred',
         icon: <IconX size={18} />,
         position: 'bottom-center',
         loading: false,
+        withBorder: true,
         autoClose: 2000
       });
       if (onError) onError(error, variables, context);
