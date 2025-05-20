@@ -1,8 +1,9 @@
-import { Button, Group, NumberInput, Stack, TextInput, Title } from '@mantine/core';
-import { useForm } from '@mantine/form';
+import { Button, Group, LoadingOverlay, NumberInput, Stack, TextInput, Title } from '@mantine/core';
+import { useForm, zodResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
+import { useMutation } from '@renderer/hooks/useMutation';
 import { useTracks } from '@renderer/hooks/useTracks';
-import { queryClient } from '@renderer/main';
+import { trackSchema } from '../../../../shared/schema/trackSchema';
 import { FC } from 'react';
 
 export interface AddTrackProps {
@@ -19,7 +20,9 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
   const { getTrack, loading } = useTracks();
 
   const form = useForm<TrackForm>({
-    mode: 'uncontrolled'
+    mode: 'uncontrolled',
+    validateInputOnChange: true,
+    validate: zodResolver(trackSchema)
   });
 
   if (!form.initialized) {
@@ -35,16 +38,21 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
     }
   }
 
-  const save = () => {
-    const track = form.getValues();
-    console.log('saving track', { track });
-    window.api.putTrack(track);
-    queryClient.invalidateQueries({ queryKey: ['tracks'] });
-    modals.closeAll();
-  };
+  const { mutate: save } = useMutation({
+    operationType: trackId ? 'update' : 'create',
+    entityName: 'track',
+    queryKey: ['tracks'],
+    mutationFn: async () => {
+      form.setSubmitting(true);
+      const track = form.getValues();
+      await window.api.putTrack(track);
+    },
+    onError: () => form.setSubmitting(false)
+  });
 
   return (
-    <>
+    <form onSubmit={form.onSubmit(() => save())}>
+      <LoadingOverlay visible={!form.initialized || form.submitting} />
       <Title>{trackId ? 'Edit Track' : 'Add Track'}</Title>
       <Stack className="mt-5">
         <TextInput
@@ -65,9 +73,11 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
           <Button variant="default" onClick={modals.closeAll}>
             Cancel
           </Button>
-          <Button onClick={save}>Save</Button>
+          <Button type="submit" disabled={!form.isValid()}>
+            Save
+          </Button>
         </Group>
       </Stack>
-    </>
+    </form>
   );
 };

@@ -58,7 +58,7 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
 
   return (
     <form onSubmit={form.onSubmit(() => save())}>
-      <LoadingOverlay visible={form.submitting} />
+      <LoadingOverlay visible={!form.initialized || form.submitting} />
       <Title>{tireId ? 'Edit' : 'Add'} Tire</Title>
       <Stack className="mt-5">
         <TextInput
@@ -69,7 +69,6 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
         />
         <Checkbox.Group
           value={getActivePositions()}
-          // error={!getActivePositions().length && 'At least one tire position must be selected'}
           error={form.errors.allowedLf}
           onChange={(positions) =>
             form.setValues({

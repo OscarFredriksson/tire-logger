@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { TitleWithButton } from './common/TitleWithButton';
+import { TitleWithButton } from '../common/TitleWithButton';
 import {
   IconDotsVertical,
   IconEdit,

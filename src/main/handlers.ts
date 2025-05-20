@@ -19,6 +19,9 @@ import {
   updateTrack
 } from './db';
 import { tireSchema } from '../shared/schema/tireSchema';
+import { carSchema } from '../shared/schema/carSchema';
+import { trackSchema } from '../shared/schema/trackSchema';
+import { stintSchema } from '../shared/schema/stintSchema';
 
 const getTracks = (): Track[] => {
   return queryTracks.all();
@@ -26,6 +29,13 @@ const getTracks = (): Track[] => {
 
 const putTrack = (_, track: PartialValue<Track, 'trackId'>) => {
   console.log('putTrack', track);
+
+  try {
+    trackSchema.parse(track);
+  } catch (e) {
+    console.log('Error validating track', e);
+    throw new Error('Validation of track schema failed');
+  }
 
   if (track.trackId) {
     console.log('Updating track', track.trackId);
@@ -42,6 +52,15 @@ const deleteTrack = (_, trackId: string) => {
 };
 
 const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
+  console.log('putStint', stint);
+
+  try {
+    stintSchema.parse(stint);
+  } catch (e) {
+    console.log('Error validating stint', e);
+    throw new Error('Validation of stint schema failed');
+  }
+
   if (stint.stintId) {
     console.log('Updating stint', stint);
     updateStint.run(
@@ -120,6 +139,13 @@ const getCars = () => queryCars.all();
 
 const putCar = (_, car: PartialValue<Car, 'carId'>) => {
   console.log('putCar', car);
+
+  try {
+    carSchema.parse(car);
+  } catch (e) {
+    console.log('Error validating car', e);
+    throw new Error('Validation of car schema failed');
+  }
 
   if (car.carId) {
     console.log('Updating car', car.carId);

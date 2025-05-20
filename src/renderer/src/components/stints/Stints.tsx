@@ -19,41 +19,25 @@ import {
   IconTrash
 } from '@tabler/icons-react';
 import { FC, PropsWithChildren, useMemo, useState } from 'react';
-import { Stint, StintProps } from './Stint';
+import { AddStint, StintProps } from './AddStint';
 import { themeConstants } from '@renderer/theme';
 import { useStints } from '@renderer/hooks/useStints';
-import { TitleWithButton } from './common/TitleWithButton';
+import { TitleWithButton } from '../common/TitleWithButton';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { useTires } from '@renderer/hooks/useTires';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { formatDistance } from '@renderer/utils/distanceUtils';
-import { queryClient } from '@renderer/main';
 
 const AccordionControl: FC<
   PropsWithChildren<{
     stintId: string;
+    carId: string;
     openStintModal: () => void;
   }>
-> = ({ stintId, openStintModal, ...props }) => {
+> = ({ stintId, carId, openStintModal, ...props }) => {
   const [opened, setOpened] = useState<boolean>(false);
-
-  const onDelete = () => {
-    modals.openConfirmModal({
-      title: 'Delete stint',
-      children: <Text>Are you sure you want to delete this stint?</Text>,
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      withCloseButton: false,
-      onConfirm: () => onConfirmDelete(),
-      onAbort: () => modals.closeAll()
-    });
-  };
-
-  const onConfirmDelete = () => {
-    window.api.deleteStint(stintId);
-    queryClient.invalidateQueries({ queryKey: ['stints'] });
-    modals.closeAll();
-  };
+  const { deleteStint } = useStints({ carId });
 
   return (
     <Center>
@@ -68,7 +52,11 @@ const AccordionControl: FC<
           <Menu.Item leftSection={<IconEdit size={14} />} onClick={openStintModal}>
             Edit stint
           </Menu.Item>
-          <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+          <Menu.Item
+            color="red"
+            leftSection={<IconTrash size={14} />}
+            onClick={() => deleteStint(stintId)}
+          >
             Delete stint
           </Menu.Item>
         </Menu.Dropdown>
@@ -135,11 +123,14 @@ export const Stints: FC = () => {
   const { loading: loadingStints, stints } = useStints({ carId });
   const { getTrack, loading: loadingTracks } = useTracks();
 
-  const openStintModal = (props?: StintProps) =>
+  const openStintModal = (props?: StintProps) => {
+    if (!carId) throw new Error('CarId is undefined.');
+
     modals.open({
-      children: <Stint {...props} carId={carId!} />,
+      children: <AddStint {...props} carId={carId} />,
       withCloseButton: false
     });
+  };
 
   return (
     <>
@@ -168,7 +159,10 @@ export const Stints: FC = () => {
               <Accordion.Item value={stint.stintId} key={stint.stintId}>
                 <AccordionControl
                   stintId={stint.stintId}
-                  openStintModal={() => openStintModal({ stintId: stint.stintId, carId: carId! })}
+                  carId={stint.carId}
+                  openStintModal={() =>
+                    openStintModal({ stintId: stint.stintId, carId: stint.carId })
+                  }
                 >
                   {track?.name} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps{' '}
                   <i>{track && '(' + formatDistance(track.length * stint.laps) + ')'}</i>

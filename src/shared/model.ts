@@ -4,10 +4,10 @@ export interface Stint {
   carId: string;
   date: Date;
   laps: number;
-  leftFront?: string;
-  rightFront?: string;
-  leftRear?: string;
-  rightRear?: string;
+  leftFront: string;
+  rightFront: string;
+  leftRear: string;
+  rightRear: string;
   note?: string;
 }
 

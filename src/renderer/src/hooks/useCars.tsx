@@ -14,6 +14,8 @@ interface UseCars {
   deleteCar: (carId: string) => void;
 }
 export const useCars = (): UseCars => {
+  const { showBoundary } = useErrorBoundary();
+
   const { data: cars, isLoading } = useQuery({
     queryKey: ['cars'],
     queryFn: window.api.getCars
@@ -32,8 +34,6 @@ export const useCars = (): UseCars => {
     queryKey: ['cars'],
     mutationFn: window.api.deleteCar
   });
-
-  const { showBoundary } = useErrorBoundary();
 
   const deleteCar = (carId: string) => {
     const car = getCar(carId);

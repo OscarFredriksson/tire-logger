@@ -13,41 +13,36 @@ import {
   Title
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
-import { useForm } from '@mantine/form';
+import { useForm, zodResolver } from '@mantine/form';
 import { FC, useMemo } from 'react';
 import { useTires } from '@renderer/hooks/useTires';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { useStints } from '@renderer/hooks/useStints';
-import { formatDistance } from '../utils/distanceUtils';
 import { modals } from '@mantine/modals';
-import { queryClient } from '@renderer/main';
+import { formatDistance } from '@renderer/utils/distanceUtils';
+import { Stint } from '@shared/model';
+import { useMutation } from '@renderer/hooks/useMutation';
+import { stintSchema } from '../../../../shared/schema/stintSchema';
 
 export interface StintProps {
   carId: string;
   stintId?: string;
 }
 
-interface StintForm {
-  date: Date;
-  trackId?: string;
-  laps?: number;
-  leftFront?: string;
-  rightFront?: string;
-  leftRear?: string;
-  rightRear?: string;
-  note?: string;
-}
-
-export const Stint: FC<StintProps> = ({ carId, stintId }) => {
+export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
   const { tracks } = useTracks();
   const { tires } = useTires({ carId });
   const { getStint, loading: loadingStints } = useStints({ carId });
 
-  const form = useForm<StintForm>();
+  const form = useForm<Partial<Stint>>({
+    mode: 'uncontrolled',
+    validateInputOnChange: true,
+    validate: zodResolver(stintSchema)
+  });
 
   if (!form.initialized) {
     if (!stintId) {
-      form.initialize({ date: new Date() });
+      form.initialize({ carId, date: new Date() });
     } else if (!loadingStints) {
       const stint = getStint(stintId);
       if (stint) {
@@ -124,18 +119,22 @@ export const Stint: FC<StintProps> = ({ carId, stintId }) => {
     [leftFront, leftRear, rightFront, tires]
   );
 
-  const save = () => {
-    const stint = form.getValues();
-    console.log('saving stint', { stint });
-    window.api.putStint({ ...stint, date: new Date(stint.date), carId });
-    queryClient.invalidateQueries({ queryKey: ['stints'] });
-    modals.closeAll();
-  };
+  const { mutate: save } = useMutation({
+    operationType: stintId ? 'update' : 'create',
+    entityName: 'stint',
+    queryKey: ['stints', carId],
+    mutationFn: async () => {
+      form.setSubmitting(true);
+      const { date, ...stint } = form.getValues();
+      await window.api.putStint({ ...stint, date: new Date(date!) });
+    },
+    onError: () => form.setSubmitting(false)
+  });
 
   return (
-    <div>
+    <form onSubmit={form.onSubmit(() => save())}>
       <Title>{stintId ? 'Edit Stint' : 'New Stint'}</Title>
-      <LoadingOverlay visible={!form.initialized} />
+      <LoadingOverlay visible={!form.initialized || form.submitting} />
       {!tracks || !tireSelections ? (
         <Loader />
       ) : (
@@ -208,10 +207,12 @@ export const Stint: FC<StintProps> = ({ carId, stintId }) => {
             <Button variant="default" onClick={modals.closeAll}>
               Cancel
             </Button>
-            <Button onClick={save}>Save</Button>
+            <Button type="submit" disabled={!form.isValid()}>
+              Save
+            </Button>
           </Group>
         </Stack>
       )}
-    </div>
+    </form>
   );
 };

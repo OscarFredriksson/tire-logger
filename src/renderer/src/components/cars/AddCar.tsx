@@ -1,8 +1,9 @@
 import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
-import { useForm } from '@mantine/form';
+import { useForm, zodResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useCars } from '@renderer/hooks/useCars';
-import { queryClient } from '@renderer/main';
+import { useMutation } from '@renderer/hooks/useMutation';
+import { carSchema } from '../../../../shared/schema/carSchema';
 import { FC } from 'react';
 
 export interface AddCarProps {
@@ -17,7 +18,9 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
   const { loading, getCar } = useCars();
 
   const form = useForm<CarForm>({
-    mode: 'uncontrolled'
+    mode: 'uncontrolled',
+    validateInputOnChange: true,
+    validate: zodResolver(carSchema)
   });
 
   if (!form.initialized) {
@@ -33,16 +36,20 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
     }
   }
 
-  const save = () => {
-    const car = form.getValues();
-    console.log('saving car', { car });
-    window.api.putCar(car);
-    queryClient.invalidateQueries({ queryKey: ['cars'] });
-    modals.closeAll();
-  };
+  const { mutate: save } = useMutation({
+    operationType: carId ? 'update' : 'create',
+    entityName: 'car',
+    queryKey: ['cars'],
+    mutationFn: async () => {
+      form.setSubmitting(true);
+      const car = form.getValues();
+      await window.api.putCar(car);
+    },
+    onError: () => form.setSubmitting(false)
+  });
 
   return (
-    <>
+    <form onSubmit={form.onSubmit(() => save())}>
       <Title>{carId ? 'Edit Car' : 'Add Car'}</Title>
       <Stack className="mt-5">
         <TextInput label="Car Name" placeholder="Enter car name" {...form.getInputProps('name')} />
@@ -50,9 +57,11 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
           <Button variant="default" onClick={modals.closeAll}>
             Cancel
           </Button>
-          <Button onClick={save}>Save</Button>
+          <Button type="submit" disabled={!form.isValid()}>
+            Save
+          </Button>
         </Group>
       </Stack>
-    </>
+    </form>
   );
 };

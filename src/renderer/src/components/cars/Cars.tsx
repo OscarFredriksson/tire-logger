@@ -1,5 +1,5 @@
 import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
-import { TitleWithButton } from './common/TitleWithButton';
+import { TitleWithButton } from '../common/TitleWithButton';
 import { useCars } from '@renderer/hooks/useCars';
 import { ActionIcon, Card, Flex, Group, Loader, Menu, Title } from '@mantine/core';
 import { AddCar, AddCarProps } from './AddCar';
