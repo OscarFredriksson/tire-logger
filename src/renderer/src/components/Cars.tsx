@@ -1,67 +1,19 @@
-import {
-  IconDotsVertical,
-  IconEdit,
-  IconInfoCircle,
-  IconPlus,
-  IconTrash
-} from '@tabler/icons-react';
+import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 import { TitleWithButton } from './common/TitleWithButton';
 import { useCars } from '@renderer/hooks/useCars';
-import {
-  ActionIcon,
-  Alert,
-  Card,
-  Flex,
-  Group,
-  Loader,
-  Menu,
-  Stack,
-  Text,
-  Title
-} from '@mantine/core';
+import { ActionIcon, Card, Flex, Group, Loader, Menu, Title } from '@mantine/core';
 import { AddCar, AddCarProps } from './AddCar';
 import { modals } from '@mantine/modals';
-import { queryClient } from '@renderer/main';
 import { FC, useState } from 'react';
 
 interface CarMenuProps {
   carId: string;
-  carName: string;
   openCarModal: (props?: AddCarProps) => void;
 }
 
-const CarMenu: FC<CarMenuProps> = ({ carId, carName, openCarModal }) => {
+const CarMenu: FC<CarMenuProps> = ({ carId, openCarModal }) => {
+  const { deleteCar } = useCars();
   const [opened, setOpened] = useState<boolean>(false);
-
-  const onDelete = () => {
-    modals.openConfirmModal({
-      title: 'Delete car',
-      children: (
-        <Stack justify="center">
-          <Text fw={500}>
-            Are you sure you want to delete the car{' '}
-            <Text span fw={800} inherit>
-              {carName}
-            </Text>
-            ?
-          </Text>
-          <Alert variant="light" color="red" icon={<IconInfoCircle />}>
-            This will also delete all tires and stints for this car.
-          </Alert>
-        </Stack>
-      ),
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      withCloseButton: false,
-      onConfirm: () => onConfirmDelete(),
-      onAbort: () => modals.closeAll()
-    });
-  };
-
-  const onConfirmDelete = () => {
-    window.api.deleteCar(carId);
-    queryClient.invalidateQueries({ queryKey: ['cars'] });
-    modals.closeAll();
-  };
 
   return (
     <Menu opened={opened} onChange={setOpened}>
@@ -74,7 +26,11 @@ const CarMenu: FC<CarMenuProps> = ({ carId, carName, openCarModal }) => {
         <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => openCarModal({ carId })}>
           Edit car
         </Menu.Item>
-        <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+        <Menu.Item
+          color="red"
+          leftSection={<IconTrash size={14} />}
+          onClick={() => deleteCar(carId)}
+        >
           Delete car
         </Menu.Item>
       </Menu.Dropdown>
@@ -107,7 +63,7 @@ export const Cars = () => {
             <Card key={'car-' + carId} padding={12}>
               <Group>
                 <Title order={5}>{name}</Title>
-                <CarMenu carId={carId} carName={name} openCarModal={openCarModal} />
+                <CarMenu carId={carId} openCarModal={openCarModal} />
               </Group>
             </Card>
           ))}

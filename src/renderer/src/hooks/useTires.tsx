@@ -26,7 +26,7 @@ export const useTires = ({ carId }: UseTiresProps): UseTires => {
     queryFn: () => window.api.getTires(carId!)
   });
 
-  const tireMap = useMemo(
+  const tireMap = useMemo<Record<string, Tire | undefined>>(
     () => Object.fromEntries(tires?.map((tire) => [tire.tireId, tire]) || []),
     [tires]
   );
@@ -37,9 +37,7 @@ export const useTires = ({ carId }: UseTiresProps): UseTires => {
     operationType: 'delete',
     entityName: 'tire',
     queryKey: ['tires', carId],
-    mutationFn: async (tireId: string) => {
-      await window.api.deleteTire(tireId);
-    },
+    mutationFn: window.api.deleteTire,
     onSuccess: () => navigate(generatePath(routes.TIRES, { carId }))
   });
 
@@ -64,10 +62,8 @@ export const useTires = ({ carId }: UseTiresProps): UseTires => {
         ),
         labels: { confirm: 'Delete', cancel: 'Cancel' },
         withCloseButton: false,
-        onConfirm: () => {
-          confirmDeleteTire(tire.tireId);
-        },
-        onAbort: () => modals.closeAll()
+        onConfirm: () => confirmDeleteTire(tire.tireId),
+        onAbort: modals.closeAll
       });
   };
 

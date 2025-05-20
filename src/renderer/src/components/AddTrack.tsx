@@ -30,7 +30,7 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
       if (track) {
         form.initialize(track);
       } else {
-        throw new Error(`Stint with id ${trackId} not found`);
+        throw new Error(`Track with id ${trackId} not found`);
       }
     }
   }
