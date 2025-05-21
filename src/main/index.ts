@@ -6,21 +6,21 @@ import { handlers } from './handlers';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log/main';
 
-autoUpdater.logger = log;
-autoUpdater.checkForUpdatesAndNotify().then((updateCheckResult) => {
-  log.info('Update check result:', updateCheckResult);
-});
+// autoUpdater.logger = log;
+// autoUpdater.checkForUpdatesAndNotify().then((updateCheckResult) => {
+//   log.info('Update check result:', updateCheckResult);
+// });
 
-autoUpdater.on('update-available', () => {
-  dialog
-    .showMessageBox({
-      title: 'Install Update',
-      message: 'A new version is available. Do you want to install it now?'
-    })
-    .then(() => {
-      setImmediate(() => autoUpdater.quitAndInstall());
-    });
-});
+// autoUpdater.on('update-available', () => {
+//   dialog
+//     .showMessageBox({
+//       title: 'Install Update',
+//       message: 'A new version is available. Do you want to install it now?'
+//     })
+//     .then(() => {
+//       setImmediate(() => autoUpdater.quitAndInstall());
+//     });
+// });
 
 function createWindow(): void {
   const splash = new BrowserWindow({
