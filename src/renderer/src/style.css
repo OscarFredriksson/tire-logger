@@ -33,9 +33,3 @@ body {
 .th-sortable:hover {
   background-color: var(--mantine-color-dark-4);
 }
-
-.icon {
-  width: 21px;
-  height: 21px;
-  border-radius: 21px;
-}

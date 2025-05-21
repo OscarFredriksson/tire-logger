@@ -263,7 +263,9 @@ export const Tire: FC = () => {
                       <Table.Tr
                         key={stintId}
                         className="cursor-pointer"
-                        onClick={() => navigate(generatePath(routes.STINTS, { carId }))}
+                        onClick={() =>
+                          navigate(generatePath(routes.STINTS, { carId }) + '?stintId=' + stintId)
+                        }
                       >
                         <Table.Td>{formatDate(date)}</Table.Td>
                         <Table.Td>{trackName || 'Unknown'}</Table.Td>

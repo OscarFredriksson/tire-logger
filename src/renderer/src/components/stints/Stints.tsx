@@ -18,14 +18,14 @@ import {
   IconPlus,
   IconTrash
 } from '@tabler/icons-react';
-import { FC, PropsWithChildren, useMemo, useState } from 'react';
+import { FC, PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { AddStint, StintProps } from './AddStint';
 import { themeConstants } from '@renderer/theme';
 import { useStints } from '@renderer/hooks/useStints';
 import { TitleWithButton } from '../common/TitleWithButton';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { useTires } from '@renderer/hooks/useTires';
-import { generatePath, useNavigate, useParams } from 'react-router';
+import { generatePath, useNavigate, useParams, useSearchParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 
@@ -120,6 +120,12 @@ const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
 
 export const Stints: FC = () => {
   const { carId } = useParams();
+  const [searchParams] = useSearchParams();
+  const openStintId = searchParams.get('stintId');
+  const scrollToRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => scrollToRef.current?.scrollIntoView({ behavior: 'smooth' }), [scrollToRef]);
+
   const { loading: loadingStints, stints } = useStints({ carId });
   const { getTrack, loading: loadingTracks } = useTracks();
 
@@ -146,56 +152,70 @@ export const Stints: FC = () => {
       ) : !stints || stints.length === 0 ? (
         <div className="mt-4">No stints added yet</div>
       ) : (
-        stints?.map((stint) => {
-          const track = getTrack(stint.trackId);
-
-          return (
-            <Accordion
-              key={stint.stintId}
-              chevronPosition="left"
-              variant="separated"
-              className="mt-2"
-            >
-              <Accordion.Item value={stint.stintId} key={stint.stintId}>
-                <AccordionControl
-                  stintId={stint.stintId}
-                  carId={stint.carId}
-                  openStintModal={() =>
-                    openStintModal({ stintId: stint.stintId, carId: stint.carId })
-                  }
+        <Accordion
+          defaultValue={openStintId}
+          chevronPosition="left"
+          variant="separated"
+          className="mt-4"
+        >
+          {stints?.map(
+            ({
+              stintId,
+              trackId,
+              carId,
+              date,
+              laps,
+              leftFront,
+              leftRear,
+              rightFront,
+              rightRear,
+              note
+            }) => {
+              const track = getTrack(trackId);
+              return (
+                <Accordion.Item
+                  value={stintId}
+                  key={stintId}
+                  {...(openStintId === stintId && { ref: scrollToRef })}
                 >
-                  {track?.name} - {stint.date.toISOString().substring(0, 10)} - {stint.laps} laps{' '}
-                  <i>{track && '(' + formatDistance(track.length * stint.laps) + ')'}</i>
-                </AccordionControl>
-                <Accordion.Panel>
-                  <Table>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Tire position</Table.Th>
-                        <Table.Th>Tire name</Table.Th>
-                        <Table.Th>Total tire usage</Table.Th>
-                        <Table.Th></Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
+                  <AccordionControl
+                    stintId={stintId}
+                    carId={carId}
+                    openStintModal={() => openStintModal({ stintId, carId })}
+                  >
+                    {track?.name} - {date.toISOString().substring(0, 10)} - {laps} laps{' '}
+                    <i>{track && '(' + formatDistance(track.length * laps) + ')'}</i>
+                  </AccordionControl>
+                  <Accordion.Panel>
+                    {note && (
+                      <Text size="sm" c="dimmed" fw={400}>
+                        Notes: {note}
+                      </Text>
+                    )}
+                    <Table>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Tire position</Table.Th>
+                          <Table.Th>Tire name</Table.Th>
+                          <Table.Th>Total tire usage</Table.Th>
+                          <Table.Th></Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
 
-                    <Table.Tbody>
-                      <TireTableRow title="Left Front" tireId={stint.leftFront} />
-                      <TireTableRow title="Right Front" tireId={stint.rightFront} />
-                      <TireTableRow title="Left Rear" tireId={stint.leftRear} />
-                      <TireTableRow title="Right Rear" tireId={stint.rightRear} />
-                    </Table.Tbody>
-                  </Table>
-                  <Divider />
-                  <div className="pl-5 pt-5">
-                    <Text size="sm" c="dimmed" fw={400}>
-                      Notes: {stint.note}
-                    </Text>
-                  </div>
-                </Accordion.Panel>
-              </Accordion.Item>
-            </Accordion>
-          );
-        })
+                      <Table.Tbody>
+                        <TireTableRow title="Left Front" tireId={leftFront} />
+                        <TireTableRow title="Right Front" tireId={rightFront} />
+                        <TireTableRow title="Left Rear" tireId={leftRear} />
+                        <TireTableRow title="Right Rear" tireId={rightRear} />
+                      </Table.Tbody>
+                    </Table>
+                    <Divider />
+                  </Accordion.Panel>
+                </Accordion.Item>
+              );
+            }
+          )}
+        </Accordion>
       )}
     </>
   );
