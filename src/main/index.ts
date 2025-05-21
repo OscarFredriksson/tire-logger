@@ -1,10 +1,8 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { handlers } from './handlers';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log/main';
 
 // autoUpdater.logger = log;
 // autoUpdater.checkForUpdatesAndNotify().then((updateCheckResult) => {
