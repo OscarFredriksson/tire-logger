@@ -3,6 +3,7 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { handlers } from './handlers';
+import { createMenu } from './Menu';
 
 // autoUpdater.logger = log;
 // autoUpdater.checkForUpdatesAndNotify().then((updateCheckResult) => {
@@ -91,6 +92,7 @@ app.whenReady().then(() => {
   handlers.forEach((handler) => ipcMain.handle(handler.name, handler));
 
   createWindow();
+  createMenu();
 });
 
 app.on('window-all-closed', () => app.quit());
