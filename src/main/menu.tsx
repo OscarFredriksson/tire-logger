@@ -1,5 +1,5 @@
 import { Menu, app, dialog } from 'electron';
-import { exportAllData, importAllData } from './dataTranfser';
+import { exportAllData, importAllData } from './dataTransfer';
 import { exportSampleFile, showImportDocumentation } from './documentation';
 
 export function createMenu() {
