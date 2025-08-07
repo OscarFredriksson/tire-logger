@@ -25,11 +25,6 @@ export async function importAllData() {
       return; // User cancelled the import
     }
 
-    // Ensure the focused window is available
-    if (!focusedWindow) {
-      throw new Error('No focused window found for import operation.');
-    }
-
     // Check if the file system module is available
     if (!fs) {
       throw new Error('File system module is not available.');
@@ -78,7 +73,7 @@ export async function importAllData() {
     if (error instanceof Zod.ZodError) {
       focusedWindow?.webContents.send('import-complete', {
         success: false,
-        message: `Imort failed: Invalid data format`
+        message: `Import failed: Invalid data format`
       });
       return;
     }
