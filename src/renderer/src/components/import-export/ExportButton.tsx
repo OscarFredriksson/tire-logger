@@ -11,7 +11,7 @@ export function ExportButton() {
   const handleExportClick = async () => {
     setModalOpen(true);
     try {
-      const result = await window.electron.ipcRenderer.invoke('export-data');
+      const result = await window.electron.ipcRenderer.invoke('exportData');
       if (result?.success) {
         Notifications.show({
           title: 'Export Successful',

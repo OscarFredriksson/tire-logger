@@ -26,7 +26,7 @@ export function ImportButton() {
     );
     if (!confirmed) return;
 
-    const result = await window.electron.ipcRenderer.invoke('select-import-file');
+    const result = await window.electron.ipcRenderer.invoke('selectImportFile');
     if (result.canceled) return;
     let importedData: ImportData | undefined;
     let summary = '';
@@ -51,7 +51,7 @@ export function ImportButton() {
   };
 
   const handleConfirm = async () => {
-    await window.electron.ipcRenderer.invoke('confirm-import', preview?.importedData);
+    await window.electron.ipcRenderer.invoke('confirmImport', preview?.importedData);
     setModalOpen(false);
     // Show success notification, refresh data, etc.
     Notifications.show({
