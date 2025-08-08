@@ -53,3 +53,15 @@ export interface Cars {
 }
 
 export type PartialValue<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+export interface ImportData {
+  exportDate?: string;
+  version?: string;
+  appName?: string;
+  data: {
+    tracks: any[];
+    cars: any[];
+    tires: any[];
+    stints: any[];
+  };
+}
