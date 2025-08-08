@@ -16,7 +16,7 @@ export const TitleWithButton: FC<PropsWithChildren<TitleWithButtonProps>> = ({
   onButtonClick
 }) => {
   return (
-    <Group justify="space-between">
+    <Group justify="space-between" gap={0}>
       <Title order={titleOrder}>{children}</Title>
       <Button variant="gradient" rightSection={buttonIcon} onClick={onButtonClick}>
         {buttonText}

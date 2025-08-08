@@ -1,9 +1,11 @@
-import { Select, Tabs, Title, Tooltip } from '@mantine/core';
+import { Group, Select, Tabs, Title, Tooltip } from '@mantine/core';
 import { useCars } from '@renderer/hooks/useCars';
 import { queryClient } from '@renderer/main';
 import { routes } from '@renderer/routes';
 import { FC, PropsWithChildren, useState } from 'react';
 import { generatePath, useLocation, useNavigate } from 'react-router';
+import { ImportButton } from './import-export/ImportButton';
+import { ExportButton } from './import-export/ExportButton';
 
 const findActiveTab = (pathname: string, carId?: string): string | undefined => {
   if (carId && pathname.includes('/stints')) return generatePath(routes.STINTS, { carId });
@@ -73,16 +75,20 @@ export const Header: FC = () => {
         </HeaderTab>
         <HeaderTab route={routes.TRACKS}>Tracks</HeaderTab>
         <HeaderTab route={routes.CARS}>Cars</HeaderTab>
-        <Select
-          className="m-2 ml-auto"
-          value={selectedCar}
-          onChange={onSelectCar}
-          placeholder="Select a car..."
-          data={cars?.map(({ carId, name }) => ({
-            value: carId,
-            label: name
-          }))}
-        />
+        <Group ml="auto" m="md" justify="end" gap="md">
+          <ImportButton />
+          <ExportButton />
+          <Select
+            value={selectedCar}
+            onChange={onSelectCar}
+            placeholder="Select a car..."
+            data={cars?.map(({ carId, name }) => ({
+              value: carId,
+              label: name
+            }))}
+            style={{ minWidth: 180 }}
+          />
+        </Group>
       </Tabs.List>
     </Tabs>
   );
