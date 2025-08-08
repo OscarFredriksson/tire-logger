@@ -1,36 +1,8 @@
 import { Menu, app, dialog } from 'electron';
-import { exportAllData, importAllData } from './dataTransfer';
 import { exportSampleFile, showImportDocumentation } from './documentation';
 
 export function createMenu() {
   const template: Electron.MenuItemConstructorOptions[] = [
-    {
-      label: 'File',
-      submenu: [
-        {
-          label: 'Import Data',
-          accelerator: 'CmdOrCtrl+I',
-          click: () => {
-            importAllData();
-          }
-        },
-        {
-          label: 'Export Data',
-          accelerator: 'CmdOrCtrl+E',
-          click: () => {
-            exportAllData();
-          }
-        },
-        { type: 'separator' },
-        {
-          label: 'Quit',
-          accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
-          click: () => {
-            app.quit();
-          }
-        }
-      ]
-    },
     // Add to your menu template
     {
       label: 'Help',

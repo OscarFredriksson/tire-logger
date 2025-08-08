@@ -1,98 +1,32 @@
-import { SqliteError } from 'better-sqlite3';
 import { BrowserWindow, dialog, app } from 'electron';
-import { importSchema } from '../shared/schema/importSchema';
 import { importDataWithOptions, getAllTableNames, getQueryAllTables } from './db';
 import fs from 'fs';
-import Zod from 'zod';
+import { ipcMain } from 'electron';
 
-export async function importAllData() {
-  try {
-    const focusedWindow = BrowserWindow.getFocusedWindow();
-    if (!focusedWindow) return;
+// In dataTransfer.ts
 
-    const importMessage = dialog.showMessageBox(focusedWindow, {
-      type: 'info',
-      title: 'Import Data',
-      message: 'This will merge imported data with existing records',
-      detail:
-        'Existing tire records may be updated with new information. Consider creating a backup before proceeding.',
-      buttons: ['Continue', 'Cancel'],
-      defaultId: 0,
-      cancelId: 1
-    });
+ipcMain.handle('select-import-file', async () => {
+  const focusedWindow = BrowserWindow.getFocusedWindow();
+  if (!focusedWindow) return { canceled: true };
 
-    if ((await importMessage).response === 1) {
-      return; // User cancelled the import
-    }
+  const result = await dialog.showOpenDialog(focusedWindow, {
+    title: 'Import Database',
+    filters: [{ name: 'JSON Files', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (result.canceled || result.filePaths.length === 0) return { canceled: true };
+  const filePath = result.filePaths[0];
+  const fileContent = fs.readFileSync(filePath, 'utf-8');
+  return { canceled: false, fileContent };
+});
 
-    // Check if the file system module is available
-    if (!fs) {
-      throw new Error('File system module is not available.');
-    }
+ipcMain.handle('confirm-import', async (_event, importedData) => {
+  // Validate and import as before
+  importDataWithOptions(importedData, { conflictResolution: 'merge' });
+  return { success: true };
+});
 
-    // Show file dialog to select JSON file
-    const result = await dialog.showOpenDialog(focusedWindow, {
-      title: 'Import Database',
-      filters: [
-        { name: 'JSON Files', extensions: ['json'] },
-        { name: 'All Files', extensions: ['*'] }
-      ],
-      properties: ['openFile']
-    });
-
-    if (result.canceled || result.filePaths.length === 0) {
-      return;
-    }
-
-    const filePath = result.filePaths[0];
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const importedData = JSON.parse(fileContent);
-
-    importSchema.parse(importedData);
-
-    // Import the data
-    importDataWithOptions(importedData, { conflictResolution: 'merge' });
-
-    // Notify renderer process that import is complete
-    focusedWindow.webContents.send('import-complete', {
-      success: true,
-      message: 'Data imported successfully'
-    });
-  } catch (error: SqliteError | Error | Zod.ZodError | any) {
-    console.error('Import failed:', error);
-    const focusedWindow = BrowserWindow.getFocusedWindow();
-
-    if (error instanceof SqliteError) {
-      focusedWindow?.webContents.send('import-complete', {
-        success: false,
-        message: `Import failed: ${error.message}`
-      });
-      return;
-    }
-
-    if (error instanceof Zod.ZodError) {
-      focusedWindow?.webContents.send('import-complete', {
-        success: false,
-        message: `Import failed: Invalid data format`
-      });
-      return;
-    }
-
-    // General error handling
-    focusedWindow?.webContents.send('import-complete', {
-      success: false,
-      message: `Import failed: ${error.message || error}`
-    });
-
-    // Optionally, you can show a dialog to the user
-    dialog.showErrorBox(
-      'Import Failed',
-      `An error occurred during import: ${error.message || error}`
-    );
-  }
-}
-
-export async function exportAllData() {
+ipcMain.handle('export-data', async () => {
   try {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (!focusedWindow) return;
@@ -109,7 +43,7 @@ export async function exportAllData() {
 
     // User cancelled the dialog
     if (result.canceled) {
-      return;
+      return { success: false, message: undefined };
     }
 
     // Get the selected file path
@@ -131,22 +65,8 @@ export async function exportAllData() {
     fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2));
     console.log(`Data exported successfully to ${filePath}`);
 
-    // Notify renderer process
-    const focusedWindow2 = BrowserWindow.getFocusedWindow();
-    if (focusedWindow2) {
-      focusedWindow2.webContents.send('export-complete', {
-        success: true,
-        message: `Data exported successfully to ${filePath}`,
-        filePath: filePath
-      });
-    }
+    return { success: true, filePath };
   } catch (error) {
-    const focusedWindow = BrowserWindow.getFocusedWindow();
-    if (focusedWindow) {
-      focusedWindow.webContents.send('export-complete', {
-        success: false,
-        message: `Export failed: ${error}`
-      });
-    }
+    return { success: false, message: error };
   }
-}
+});
