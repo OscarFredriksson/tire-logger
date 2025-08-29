@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
 import { Car, PartialValue, Stint, Tire, Track } from '../shared/model';
 
+export type TireLoggerAPI = typeof api;
+
 // Custom APIs for renderer
 const api = {
   //Tracks
