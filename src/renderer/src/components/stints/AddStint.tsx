@@ -15,9 +15,9 @@ import {
 import { DateTimePicker } from '@mantine/dates';
 import { useForm, zodResolver } from '@mantine/form';
 import { FC, useMemo } from 'react';
-import { useTires } from '@renderer/hooks/useTires';
-import { useTracks } from '@renderer/hooks/useTracks';
-import { useStints } from '@renderer/hooks/useStints';
+import { useActiveTires } from '@renderer/hooks/useTires';
+import { useActiveTracks } from '@renderer/hooks/useTracks';
+import { useActiveStints } from '@renderer/hooks/useStints';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { Stint } from '@shared/model';
@@ -30,9 +30,9 @@ export interface StintProps {
 }
 
 export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
-  const { tracks } = useTracks();
-  const { tires } = useTires({ carId });
-  const { getStint, loading: loadingStints } = useStints({ carId });
+  const { activeTracks } = useActiveTracks();
+  const { activeTires } = useActiveTires({ carId });
+  const { getStint, loadingActiveStints } = useActiveStints({ carId });
 
   const form = useForm<Partial<Stint>>({
     mode: 'uncontrolled',
@@ -43,7 +43,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
   if (!form.initialized) {
     if (!stintId) {
       form.initialize({ carId, date: new Date() });
-    } else if (!loadingStints) {
+    } else if (!loadingActiveStints) {
       const stint = getStint(stintId);
       if (stint) {
         form.initialize(stint);
@@ -55,7 +55,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
 
   const getDistanceProps = () => {
     const { trackId, laps } = form.getValues();
-    const track = tracks?.find((track) => track.trackId === trackId);
+    const track = activeTracks?.find((track) => track.trackId === trackId);
 
     if (!track) return { placeholder: 'Select track...' };
     if (!laps) return { placeholder: 'Enter number of laps...' };
@@ -67,56 +67,56 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
 
   const tireSelections = useMemo(
     () =>
-      tires
+      activeTires
         ?.map(({ tireId, name }) => ({ value: tireId, label: name }))
         .filter(({ value }) =>
           [leftFront, rightFront, leftRear, rightRear].every((tire) => tire !== value)
         ),
-    [tires, leftFront, rightFront, leftRear, rightRear]
+    [activeTires, leftFront, rightFront, leftRear, rightRear]
   );
 
   const allowedLfTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedLf }) =>
             allowedLf && [rightFront, leftRear, rightRear].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [rightFront, leftRear, rightRear, tires]
+    [rightFront, leftRear, rightRear, activeTires]
   );
 
   const allowedRfTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedRf }) =>
             allowedRf && [leftFront, leftRear, rightRear].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [leftFront, leftRear, rightRear, tires]
+    [leftFront, leftRear, rightRear, activeTires]
   );
 
   const allowedLrTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedLr }) =>
             allowedLr && [leftFront, rightFront, rightRear].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [leftFront, rightFront, rightRear, tires]
+    [leftFront, rightFront, rightRear, activeTires]
   );
 
   const allowedRrTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedRr }) =>
             allowedRr && [leftFront, leftRear, rightFront].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [leftFront, leftRear, rightFront, tires]
+    [leftFront, leftRear, rightFront, activeTires]
   );
 
   const { mutate: save } = useMutation({
@@ -125,8 +125,22 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     queryKey: ['stints', carId],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const { date, ...stint } = form.getValues();
-      await window.api.putStint({ ...stint, date: new Date(date!) });
+      const { date, trackId, laps, leftFront, rightFront, leftRear, rightRear, note, archived } =
+        form.getValues();
+      if (!trackId) throw new Error('Track is required');
+      if (!laps) throw new Error('Laps is required');
+      await window.api.putStint({
+        carId,
+        date: new Date(date!),
+        trackId,
+        laps,
+        leftFront: leftFront ?? '',
+        rightFront: rightFront ?? '',
+        leftRear: leftRear ?? '',
+        rightRear: rightRear ?? '',
+        note: note ?? '',
+        archived: archived ?? false
+      });
     },
     onError: () => form.setSubmitting(false)
   });
@@ -135,7 +149,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     <form onSubmit={form.onSubmit(() => save())}>
       <Title>{stintId ? 'Edit Stint' : 'New Stint'}</Title>
       <LoadingOverlay visible={!form.initialized || form.submitting} />
-      {!tracks || !tireSelections ? (
+      {!activeTracks || !tireSelections ? (
         <Loader />
       ) : (
         <Stack className="mt-5">
@@ -144,7 +158,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
             label="Track"
             placeholder="Select track"
             allowDeselect={false}
-            data={tracks.map(({ trackId, name }) => ({ value: trackId, label: name }))}
+            data={activeTracks.map(({ trackId, name }) => ({ value: trackId, label: name }))}
             {...form.getInputProps('trackId')}
             searchable
           />
