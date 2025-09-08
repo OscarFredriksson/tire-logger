@@ -4,21 +4,25 @@ import { useMutation } from './useMutation';
 import { modals } from '@mantine/modals';
 import { Alert, Button, Group, LoadingOverlay, Stack, Text } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useErrorBoundary } from 'react-error-boundary';
 
-interface UseCars {
-  loading: boolean;
-  cars?: Car[];
+interface UseActiveCars {
+  loadingActiveCars: boolean;
+  activeCars?: Car[];
   getCar: (carId: string) => Car | undefined;
-  deleteCar: (carId: string) => void;
+  archiveCar: (carId: string) => void;
 }
-export const useCars = (): UseCars => {
+
+interface UseActiveCarsProps {
+  onCarsChange?: (cars: Car[]) => void;
+}
+export const useActiveCar = ({ onCarsChange }: UseActiveCarsProps = {}): UseActiveCars => {
   const { showBoundary } = useErrorBoundary();
 
   const { data: cars, isLoading } = useQuery({
-    queryKey: ['cars'],
-    queryFn: window.api.getCars
+    queryKey: ['cars', false],
+    queryFn: () => window.api.getCars(false)
   });
 
   const carMap = useMemo<Record<string, Car>>(
@@ -28,14 +32,15 @@ export const useCars = (): UseCars => {
 
   const getCar = (carId: string) => carMap[carId];
 
-  const { isPending, mutate: confirmDeleteCar } = useMutation({
-    operationType: 'delete',
+  const { isPending, mutate: confirmArchiveCar } = useMutation({
+    operationType: 'archive',
     entityName: 'car',
     queryKey: ['cars'],
-    mutationFn: window.api.deleteCar
+    mutationFn: ({ carId, archiveRelated }: { carId: string; archiveRelated: boolean }) =>
+      window.api.archiveCar(carId, archiveRelated)
   });
 
-  const deleteCar = (carId: string) => {
+  const archiveCar = (carId: string) => {
     const car = getCar(carId);
 
     if (!car) {
@@ -44,12 +49,12 @@ export const useCars = (): UseCars => {
     }
 
     modals.open({
-      title: 'Delete car',
+      title: 'Archive car',
       children: (
         <Stack justify="center">
           <LoadingOverlay visible={isPending} w="100%" h="100%" />
           <Text fw={500}>
-            Are you sure you want to delete the car{' '}
+            Are you sure you want to archive the car{' '}
             <Text span fw={800} inherit>
               {car.name}
             </Text>
@@ -62,7 +67,7 @@ export const useCars = (): UseCars => {
             <Button variant="default" onClick={modals.closeAll}>
               Cancel
             </Button>
-            <Button onClick={() => confirmDeleteCar(carId)}>Save</Button>
+            <Button onClick={() => confirmArchiveCar({ carId, archiveRelated: true })}>Save</Button>
           </Group>
         </Stack>
       ),
@@ -70,10 +75,83 @@ export const useCars = (): UseCars => {
     });
   };
 
+  // Notify consumer when filtered cars change
+  useEffect(() => {
+    if (onCarsChange) {
+      onCarsChange(cars);
+    }
+  }, [cars, onCarsChange]);
+
   return {
-    loading: isLoading,
-    cars,
+    loadingActiveCars: isLoading,
+    activeCars: cars,
     getCar,
-    deleteCar
+    archiveCar
   };
+};
+
+interface UseArchivedCars {
+  loadingArchivedCars: boolean;
+  archivedCars?: Car[];
+  getArchivedCar: (carId: string) => Car | undefined;
+  restoreCar: (carId: string) => void;
+}
+
+export const useArchivedCars = (): UseArchivedCars => {
+  const { showBoundary } = useErrorBoundary();
+
+  const { data: archivedCars, isLoading: loadingArchivedCars } = useQuery({
+    queryKey: ['cars', true],
+    queryFn: () => window.api.getCars(true)
+  });
+
+  const archivedCarMap = useMemo<Record<string, Car>>(
+    () => Object.fromEntries(archivedCars?.map((car) => [car.carId, car]) || []),
+    [archivedCars]
+  );
+
+  console.log(archivedCars);
+
+  const getArchivedCar = (carId: string) => archivedCarMap[carId];
+
+  const { mutate: confirmRestoreCar, isPending } = useMutation({
+    operationType: 'update',
+    entityName: 'car',
+    queryKey: ['cars'],
+    mutationFn: ({ carId }: { carId: string }) => window.api.restoreCar(carId)
+  });
+
+  const restoreCar = (carId: string) => {
+    const car = getArchivedCar(carId);
+
+    if (!car) {
+      showBoundary(new Error(`Car with id ${carId} not found`));
+      return;
+    }
+
+    modals.open({
+      title: 'Restore car',
+      children: (
+        <Stack justify="center">
+          <LoadingOverlay visible={isPending} w="100%" h="100%" />
+          <Text fw={500}>
+            Are you sure you want to restore the car{' '}
+            <Text span fw={800} inherit>
+              {car.name}
+            </Text>
+            ?
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={modals.closeAll}>
+              Cancel
+            </Button>
+            <Button onClick={() => confirmRestoreCar({ carId })}>Restore</Button>
+          </Group>
+        </Stack>
+      ),
+      withCloseButton: false
+    });
+  };
+
+  return { loadingArchivedCars, archivedCars, getArchivedCar, restoreCar };
 };

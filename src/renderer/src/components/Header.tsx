@@ -1,11 +1,12 @@
 import { Group, Select, Tabs, Title, Tooltip } from '@mantine/core';
-import { useCars } from '@renderer/hooks/useCars';
+import { useActiveCar } from '@renderer/hooks/useCars';
 import { queryClient } from '@renderer/main';
 import { routes } from '@renderer/routes';
 import { FC, PropsWithChildren, useState } from 'react';
 import { generatePath, useLocation, useNavigate } from 'react-router';
 import { ImportButton } from './import-export/ImportButton';
 import { ExportButton } from './import-export/ExportButton';
+import { Car } from '@shared/model';
 
 const findActiveTab = (pathname: string, carId?: string): string | undefined => {
   if (carId && pathname.includes('/stints')) return generatePath(routes.STINTS, { carId });
@@ -34,16 +35,28 @@ const HeaderTab: FC<PropsWithChildren<HeaderTabProps>> = ({
   </Tooltip>
 );
 
+const findFirstActiveCar = (cars: Car[]) => cars.find((car) => !car.archived);
+
 export const Header: FC = () => {
-  const { cars } = useCars();
+  const { activeCars } = useActiveCar({
+    onCarsChange: (cars) => {
+      // If the currently selected car is archived, select the first active car
+      if (selectedCar && cars.every((car) => car.carId !== selectedCar || car.archived)) {
+        const firstActiveCar = findFirstActiveCar(cars);
+        if (firstActiveCar) {
+          setSelectedCar(firstActiveCar.carId);
+        }
+      }
+    }
+  });
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [selectedCar, setSelectedCar] = useState<string | undefined>();
 
   const activeTab = findActiveTab(pathname, selectedCar);
 
-  if (!selectedCar && cars && cars.length > 0) {
-    setSelectedCar(cars[0].carId);
+  if (!selectedCar && activeCars && activeCars.length > 0) {
+    setSelectedCar(findFirstActiveCar(activeCars)!.carId);
   }
 
   const onSelectCar = (carId: string | null) => {
@@ -82,7 +95,7 @@ export const Header: FC = () => {
             value={selectedCar}
             onChange={onSelectCar}
             placeholder="Select a car..."
-            data={cars?.map(({ carId, name }) => ({
+            data={activeCars?.map(({ carId, name }) => ({
               value: carId,
               label: name
             }))}
