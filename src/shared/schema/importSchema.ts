@@ -4,14 +4,16 @@ import { z } from 'zod';
 const importStintSchema = z
   .object({
     id: z.string(),
-    date: z.string() // Make date optional for import
+    date: z.string(), // Make date optional for import
+    archived: z.coerce.boolean().optional()
     // Add other minimal required fields
   })
   .passthrough(); // Allow additional fields
 
 const importTireSchema = z
   .object({
-    id: z.string()
+    id: z.string(),
+    archived: z.coerce.boolean().optional()
     // Other minimal fields
   })
   .passthrough();
@@ -19,7 +21,8 @@ const importTireSchema = z
 const importCarSchema = z
   .object({
     id: z.string(),
-    name: z.string()
+    name: z.string(),
+    archived: z.coerce.boolean().optional()
     // Other minimal fields
   })
   .passthrough();
@@ -27,7 +30,8 @@ const importCarSchema = z
 const importTrackSchema = z
   .object({
     id: z.string(),
-    name: z.string()
+    name: z.string(),
+    archived: z.coerce.boolean().optional()
     // Other minimal fields
   })
   .passthrough();
