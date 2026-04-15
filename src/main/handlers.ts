@@ -134,7 +134,7 @@ const getTires = (_, carId: string, archive: boolean) => {
 };
 
 const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
-  const { tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr } = tire;
+  const { tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr, archived } = tire;
   console.log('putTire', tire);
 
   try {
@@ -152,6 +152,7 @@ const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
       allowedRf ? 1 : 0,
       allowedLr ? 1 : 0,
       allowedRr ? 1 : 0,
+      archived ? 1 : 0,
       tireId
     );
   } else {
