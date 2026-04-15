@@ -5,6 +5,7 @@ export interface TitleWithButtonProps {
   titleOrder?: TitleOrder;
   buttonIcon?: React.ReactNode;
   buttonText: string;
+  buttonSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   centerElement?: React.ReactNode;
   onButtonClick: () => void;
 }
@@ -14,6 +15,7 @@ export const TitleWithButton: FC<PropsWithChildren<TitleWithButtonProps>> = ({
   titleOrder,
   buttonIcon,
   buttonText,
+  buttonSize = 'sm',
   centerElement,
   onButtonClick
 }) => {
@@ -21,7 +23,12 @@ export const TitleWithButton: FC<PropsWithChildren<TitleWithButtonProps>> = ({
     <Group justify="space-between" gap={0} align="center">
       <Title order={titleOrder}>{children}</Title>
       {centerElement}
-      <Button variant="gradient" rightSection={buttonIcon} onClick={onButtonClick}>
+      <Button
+        variant="gradient"
+        size={buttonSize}
+        rightSection={buttonIcon}
+        onClick={onButtonClick}
+      >
         {buttonText}
       </Button>
     </Group>

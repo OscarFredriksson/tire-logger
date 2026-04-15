@@ -13,14 +13,14 @@ const api = {
   archiveTrack: (trackId: string) => ipcRenderer.invoke('archiveTrack', trackId),
   restoreTrack: (trackId: string) => ipcRenderer.invoke('restoreTrack', trackId),
   // Cars
-  getCars: (archived: boolean): Promise<any> => ipcRenderer.invoke('getCars', archived),
+  getCars: (archived: boolean): Promise<Car[]> => ipcRenderer.invoke('getCars', archived),
   putCar: (car: PartialValue<Car, 'carId'>) => ipcRenderer.invoke('putCar', car),
   deleteCar: (carId: string) => ipcRenderer.invoke('deleteCar', carId),
   archiveCar: (carId: string, archiveRelated: boolean) =>
     ipcRenderer.invoke('archiveCar', carId, archiveRelated),
   restoreCar: (carId: string) => ipcRenderer.invoke('restoreCar', carId),
   // Tires
-  getTires: (carId: string, archive: boolean): Promise<any> =>
+  getTires: (carId: string, archive: boolean): Promise<Tire[]> =>
     ipcRenderer.invoke('getTires', carId, archive),
   putTire: (tire: PartialValue<Tire, 'tireId'>) => ipcRenderer.invoke('putTire', tire),
   deleteTire: (tireId: string) => ipcRenderer.invoke('deleteTire', tireId),

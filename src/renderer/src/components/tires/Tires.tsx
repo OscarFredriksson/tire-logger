@@ -5,13 +5,18 @@ import {
   Loader,
   Menu,
   PillGroup,
-  SegmentedControl,
   Skeleton,
   Stack,
   Table,
   Text
 } from '@mantine/core';
-import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
+import {
+  IconArrowBackUp,
+  IconDotsVertical,
+  IconEdit,
+  IconPlus,
+  IconTrash
+} from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
@@ -27,6 +32,7 @@ import { TireFilters } from './TireFilters';
 import { formatDate } from '@renderer/utils/dateUtils';
 import { ThSortable } from '../common/ThSortable';
 import { PillWithTooltip } from '../common/PillWithTooltip';
+import SegmentToggle from '../common/SegmentToggle';
 
 interface TireMenuProps {
   tireId: string;
@@ -62,8 +68,7 @@ const TireMenu: FC<TireMenuProps> = ({ tireId, openTireModal, archived }) => {
         </Menu.Item>
         {(archived && (
           <Menu.Item
-            color="red"
-            leftSection={<IconTrash size={14} />}
+            leftSection={<IconArrowBackUp size={14} />}
             onClick={() => restoreTire(tireId)}
           >
             Restore tire
@@ -564,15 +569,9 @@ export const Tires: FC = () => {
         buttonText="Add tire"
         onButtonClick={openTireModal}
         centerElement={
-          <SegmentedControl
+          <SegmentToggle
             value={showArchived ? 'archived' : 'active'}
             onChange={(v) => setShowArchived(v === 'archived')}
-            data={[
-              { label: 'Active', value: 'active' },
-              { label: 'Archived', value: 'archived' }
-            ]}
-            mr="auto"
-            ml="lg"
           />
         }
       >

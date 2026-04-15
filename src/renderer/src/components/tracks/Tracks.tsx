@@ -16,7 +16,6 @@ import {
   Group,
   Loader,
   Menu,
-  SegmentedControl,
   Stack,
   Text,
   Title
@@ -25,6 +24,7 @@ import { AddTrack, AddTrackProps } from './AddTrack';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { queryClient } from '@renderer/main';
+import SegmentToggle from '../common/SegmentToggle';
 
 interface TrackMenuProps {
   trackId: string;
@@ -110,7 +110,7 @@ const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal, arc
             Restore track
           </Menu.Item>
         )) || (
-          <Menu.Item leftSection={<IconTrash size={14} />} onClick={onDelete}>
+          <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
             Archive track
           </Menu.Item>
         )}
@@ -138,15 +138,9 @@ export const Tracks: FC = () => {
         buttonText="Add track"
         onButtonClick={openTrackModal}
         centerElement={
-          <SegmentedControl
+          <SegmentToggle
             value={showArchived ? 'archived' : 'active'}
             onChange={(v) => setShowArchived(v === 'archived')}
-            data={[
-              { label: 'Active', value: 'active' },
-              { label: 'Archived', value: 'archived' }
-            ]}
-            mr="auto"
-            ml="lg"
           />
         }
       >

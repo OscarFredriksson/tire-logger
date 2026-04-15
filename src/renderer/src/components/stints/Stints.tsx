@@ -8,11 +8,11 @@ import {
   Table,
   Tooltip,
   Text,
-  Menu,
-  SegmentedControl
+  Menu
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import {
+  IconArrowBackUp,
   IconArrowRight,
   IconDotsVertical,
   IconEdit,
@@ -29,6 +29,7 @@ import { useActiveTires } from '@renderer/hooks/useTires';
 import { generatePath, useNavigate, useParams, useSearchParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { formatDistance } from '@renderer/utils/distanceUtils';
+import SegmentToggle from '../common/SegmentToggle';
 
 const AccordionControl: FC<
   PropsWithChildren<{
@@ -56,11 +57,18 @@ const AccordionControl: FC<
             Edit stint
           </Menu.Item>
           {(archived && (
-            <Menu.Item leftSection={<IconTrash size={14} />} onClick={() => restoreStint(stintId)}>
+            <Menu.Item
+              leftSection={<IconArrowBackUp size={14} />}
+              onClick={() => restoreStint(stintId)}
+            >
               Restore stint
             </Menu.Item>
           )) || (
-            <Menu.Item leftSection={<IconTrash size={14} />} onClick={() => archiveStint(stintId)}>
+            <Menu.Item
+              color="red"
+              leftSection={<IconTrash size={14} />}
+              onClick={() => archiveStint(stintId)}
+            >
               Archive stint
             </Menu.Item>
           )}
@@ -148,7 +156,6 @@ export const Stints: FC = () => {
       withCloseButton: false
     });
   };
-
   return (
     <>
       <TitleWithButton
@@ -156,15 +163,9 @@ export const Stints: FC = () => {
         buttonText="Add stint"
         onButtonClick={() => openStintModal()}
         centerElement={
-          <SegmentedControl
+          <SegmentToggle
             value={showArchived ? 'archived' : 'active'}
             onChange={(v) => setShowArchived(v === 'archived')}
-            data={[
-              { label: 'Active', value: 'active' },
-              { label: 'Archived', value: 'archived' }
-            ]}
-            mr="auto"
-            ml="lg"
           />
         }
       >

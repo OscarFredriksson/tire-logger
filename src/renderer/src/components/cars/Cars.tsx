@@ -1,19 +1,17 @@
-import { IconDotsVertical, IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
+import {
+  IconArrowBackUp,
+  IconDotsVertical,
+  IconEdit,
+  IconPlus,
+  IconTrash
+} from '@tabler/icons-react';
 import { TitleWithButton } from '../common/TitleWithButton';
 import { useArchivedCars, useActiveCar } from '@renderer/hooks/useCars';
-import {
-  ActionIcon,
-  Card,
-  Flex,
-  Group,
-  Loader,
-  Menu,
-  SegmentedControl,
-  Title
-} from '@mantine/core';
+import { ActionIcon, Card, Flex, Group, Loader, Menu, Title } from '@mantine/core';
 import { AddCar, AddCarProps } from './AddCar';
 import { modals } from '@mantine/modals';
 import { FC, useState } from 'react';
+import SegmentToggle from '../common/SegmentToggle';
 
 interface CarMenuProps {
   carId: string;
@@ -38,11 +36,15 @@ const CarMenu: FC<CarMenuProps> = ({ carId, openCarModal, archived }) => {
           Edit car
         </Menu.Item>
         {(archived && (
-          <Menu.Item leftSection={<IconTrash size={14} />} onClick={() => restoreCar(carId)}>
+          <Menu.Item leftSection={<IconArrowBackUp size={14} />} onClick={() => restoreCar(carId)}>
             Restore car
           </Menu.Item>
         )) || (
-          <Menu.Item leftSection={<IconTrash size={14} />} onClick={() => archiveCar(carId)}>
+          <Menu.Item
+            color="red"
+            leftSection={<IconTrash size={14} />}
+            onClick={() => archiveCar(carId)}
+          >
             Archive car
           </Menu.Item>
         )}
@@ -74,15 +76,9 @@ export const Cars = () => {
         buttonText="Add car"
         onButtonClick={openCarModal}
         centerElement={
-          <SegmentedControl
+          <SegmentToggle
             value={showArchived ? 'archived' : 'active'}
             onChange={(v) => setShowArchived(v === 'archived')}
-            data={[
-              { label: 'Active', value: 'active' },
-              { label: 'Archived', value: 'archived' }
-            ]}
-            mr="auto"
-            ml="lg"
           />
         }
       >

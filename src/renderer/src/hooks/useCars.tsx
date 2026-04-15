@@ -61,7 +61,7 @@ export const useActiveCar = ({ onCarsChange }: UseActiveCarsProps = {}): UseActi
             ?
           </Text>
           <Alert variant="light" color="red" icon={<IconInfoCircle />}>
-            This will also delete all tires and stints for this car.
+            This will also archive all tires and stints for this car.
           </Alert>
           <Group justify="flex-end">
             <Button variant="default" onClick={modals.closeAll}>
@@ -77,7 +77,7 @@ export const useActiveCar = ({ onCarsChange }: UseActiveCarsProps = {}): UseActi
 
   // Notify consumer when filtered cars change
   useEffect(() => {
-    if (onCarsChange) {
+    if (onCarsChange && cars) {
       onCarsChange(cars);
     }
   }, [cars, onCarsChange]);
