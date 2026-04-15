@@ -344,13 +344,20 @@ function insertRecord(db: any, tableName: string, record: any, columns: string[]
 }
 export function migrateAddArchivedFlag(db: BetterSqlite3Database) {
   const tables = ['cars', 'tires', 'stints', 'tracks'];
+  const tableExists = db.prepare<[string], { ok: number }>(
+    "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?) AS ok"
+  );
+
   for (const table of tables) {
-    // Check if 'archived' column exists
-    const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+    const row = tableExists.get(table);
+    if (!row || row.ok !== 1) continue;
+
+    const columns = db.prepare('PRAGMA table_info(' + table + ')').all() as Array<{ name: string }>;
     const hasArchived = columns.some((col) => col.name === 'archived');
+
     if (!hasArchived) {
-      db.prepare(`ALTER TABLE ${table} ADD COLUMN archived INTEGER DEFAULT 0`).run();
-      console.log(`Added 'archived' column to ${table}`);
+      db.prepare('ALTER TABLE ' + table + ' ADD COLUMN archived INTEGER DEFAULT 0').run();
+      console.log('Added archived column to ' + table);
     }
   }
 }
