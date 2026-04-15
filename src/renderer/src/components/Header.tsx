@@ -4,9 +4,8 @@ import { queryClient } from '@renderer/main';
 import { routes } from '@renderer/routes';
 import { FC, PropsWithChildren, useState } from 'react';
 import { generatePath, useLocation, useNavigate } from 'react-router';
-import { ImportButton } from './import-export/ImportButton';
-import { ExportButton } from './import-export/ExportButton';
 import { Car } from '@shared/model';
+import { DataActionsMenu } from './import-export/ImportExportMenu';
 
 const findActiveTab = (pathname: string, carId?: string): string | undefined => {
   if (carId && pathname.includes('/stints')) return generatePath(routes.STINTS, { carId });
@@ -89,8 +88,7 @@ export const Header: FC = () => {
         <HeaderTab route={routes.TRACKS}>Tracks</HeaderTab>
         <HeaderTab route={routes.CARS}>Cars</HeaderTab>
         <Group ml="auto" m="md" justify="end" gap="md">
-          <ImportButton />
-          <ExportButton />
+          <DataActionsMenu />
           <Select
             value={selectedCar}
             onChange={onSelectCar}
