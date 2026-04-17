@@ -1,6 +1,13 @@
 import { Car, ImportData, PartialValue, Stint, Tire, Track } from '../shared/model';
 import { randomUUID } from 'crypto';
 import {
+  archiveCarId,
+  archiveStintId,
+  archiveStintsByCar,
+  archiveStintsByTrackId,
+  archiveTireId,
+  archiveTiresByCar,
+  archiveTrackId,
   deleteCarId,
   deleteStintId,
   deleteTireId,
@@ -16,6 +23,10 @@ import {
   queryStints,
   queryTires,
   queryTracks,
+  restoreCarId,
+  restoreStintId,
+  restoreTireId,
+  restoreTrackId,
   updateCar,
   updateStint,
   updateTire,
@@ -28,8 +39,10 @@ import { stintSchema } from '../shared/schema/stintSchema';
 import { app, BrowserWindow, dialog } from 'electron';
 import fs from 'fs';
 
-const getTracks = (): Track[] => {
-  return queryTracks.all();
+const boolToNumber = (value: boolean): number => (value ? 1 : 0);
+
+const getTracks = (_, archived: boolean): Track[] => {
+  return queryTracks.all(archived ? 1 : 0);
 };
 
 const putTrack = (_, track: PartialValue<Track, 'trackId'>) => {
@@ -54,6 +67,18 @@ const putTrack = (_, track: PartialValue<Track, 'trackId'>) => {
 const deleteTrack = (_, trackId: string) => {
   console.log('Deleting track', trackId);
   deleteTrackId.run(trackId);
+};
+
+const archiveTrack = (_, trackId: string) => {
+  archiveTrackId.run(trackId);
+  console.log('Archiving track', trackId);
+  archiveStintsByTrackId.run(trackId);
+  console.log('Archiving related stints for track', trackId);
+};
+
+const restoreTrack = (_, trackId: string) => {
+  console.log('Restoring track', trackId);
+  restoreTrackId.run(trackId);
 };
 
 const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
@@ -96,17 +121,20 @@ const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
   }
 };
 
-const getStints = (_, carId: string) => {
-  return queryStints.all(carId).map((stint) => ({
+const getStints = (_, carId: string, archived: boolean) => {
+  return queryStints.all(carId, archived ? 1 : 0).map((stint) => ({
     ...stint,
     date: new Date(stint.date)
   }));
 };
 
-const getTires = (_, carId: string) => queryTires.all(carId);
+const getTires = (_, carId: string, archive: boolean) => {
+  console.log('getTires', carId, archive ? 1 : 0);
+  return queryTires.all(carId, archive ? 1 : 0);
+};
 
 const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
-  const { tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr } = tire;
+  const { tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr, archived } = tire;
   console.log('putTire', tire);
 
   try {
@@ -124,6 +152,7 @@ const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
       allowedRf ? 1 : 0,
       allowedLr ? 1 : 0,
       allowedRr ? 1 : 0,
+      archived ? 1 : 0,
       tireId
     );
   } else {
@@ -140,7 +169,11 @@ const putTire = (_, tire: PartialValue<Tire, 'tireId'>) => {
   }
 };
 
-const getCars = () => queryCars.all();
+const getCars = (_, archived: boolean) => {
+  console.log('getCars', archived);
+  console.log('getCars', boolToNumber(archived));
+  return queryCars.all(boolToNumber(archived));
+};
 
 const putCar = (_, car: PartialValue<Car, 'carId'>) => {
   console.log('putCar', car);
@@ -166,14 +199,50 @@ const deleteCar = (_, carId: string) => {
   deleteCarId.run(carId);
 };
 
+const archiveCar = (_, carId: string, archiveRelated: boolean) => {
+  console.log('Archiving car', carId);
+  archiveCarId.run(carId);
+  if (archiveRelated) {
+    archiveTiresByCar.run(carId);
+    console.log('Archiving related tires and stints for car', carId);
+    archiveStintsByCar.run(carId);
+    console.log('Archiving related stints for car', carId);
+  }
+};
+
+const restoreCar = (_, carId: string) => {
+  console.log('Restoring car', carId);
+  restoreCarId.run(carId);
+};
+
 const deleteTire = (_, tireId: string) => {
   console.log('Deleting tire', tireId);
   deleteTireId.run(tireId);
 };
 
+const archiveTire = (_, tireId: string) => {
+  console.log('Archiving tire', tireId);
+  archiveTireId.run(tireId);
+};
+
+const restoreTire = (_, tireId: string) => {
+  console.log('Restoring tire', tireId);
+  restoreTireId.run(tireId);
+};
+
 const deleteStint = (_, stintId: string) => {
   console.log('Deleting stint', stintId);
   deleteStintId.run(stintId);
+};
+
+const archiveStint = (_, stintId: string) => {
+  console.log('Archiving stint', stintId);
+  archiveStintId.run(stintId);
+};
+
+const restoreStint = (_, stintId: string) => {
+  console.log('Restoring stint', stintId);
+  restoreStintId.run(stintId);
 };
 
 async function selectImportFile() {
@@ -247,18 +316,26 @@ export const handlers = [
   getTracks,
   putTrack,
   deleteTrack,
+  archiveTrack,
+  restoreTrack,
   // Cars
   getCars,
   putCar,
   deleteCar,
+  archiveCar,
+  restoreCar,
   // Tires
   getTires,
   putTire,
   deleteTire,
+  archiveTire,
+  restoreTire,
   // Stints
   putStint,
   getStints,
   deleteStint,
+  archiveStint,
+  restoreStint,
   // Data Transfer
   selectImportFile,
   confirmImport,

@@ -12,6 +12,7 @@ import {
 } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import {
+  IconArrowBackUp,
   IconArrowRight,
   IconDotsVertical,
   IconEdit,
@@ -21,23 +22,26 @@ import {
 import { FC, PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { AddStint, StintProps } from './AddStint';
 import { themeConstants } from '@renderer/theme';
-import { useStints } from '@renderer/hooks/useStints';
+import { useActiveStints, useArchivedStints } from '@renderer/hooks/useStints';
 import { TitleWithButton } from '../common/TitleWithButton';
-import { useTracks } from '@renderer/hooks/useTracks';
-import { useTires } from '@renderer/hooks/useTires';
+import { useActiveTracks } from '@renderer/hooks/useTracks';
+import { useActiveTires } from '@renderer/hooks/useTires';
 import { generatePath, useNavigate, useParams, useSearchParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { formatDistance } from '@renderer/utils/distanceUtils';
+import SegmentToggle from '../common/SegmentToggle';
 
 const AccordionControl: FC<
   PropsWithChildren<{
     stintId: string;
     carId: string;
     openStintModal: () => void;
+    archived?: boolean;
   }>
-> = ({ stintId, carId, openStintModal, ...props }) => {
+> = ({ stintId, carId, openStintModal, archived, ...props }) => {
   const [opened, setOpened] = useState<boolean>(false);
-  const { deleteStint } = useStints({ carId });
+  const { archiveStint } = useActiveStints({ carId });
+  const { restoreStint } = useArchivedStints({ carId });
 
   return (
     <Center>
@@ -52,13 +56,22 @@ const AccordionControl: FC<
           <Menu.Item leftSection={<IconEdit size={14} />} onClick={openStintModal}>
             Edit stint
           </Menu.Item>
-          <Menu.Item
-            color="red"
-            leftSection={<IconTrash size={14} />}
-            onClick={() => deleteStint(stintId)}
-          >
-            Delete stint
-          </Menu.Item>
+          {(archived && (
+            <Menu.Item
+              leftSection={<IconArrowBackUp size={14} />}
+              onClick={() => restoreStint(stintId)}
+            >
+              Restore stint
+            </Menu.Item>
+          )) || (
+            <Menu.Item
+              color="red"
+              leftSection={<IconTrash size={14} />}
+              onClick={() => archiveStint(stintId)}
+            >
+              Archive stint
+            </Menu.Item>
+          )}
         </Menu.Dropdown>
       </Menu>
     </Center>
@@ -72,24 +85,28 @@ interface TireTableRowProps {
 
 const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
   const { carId } = useParams();
-  const { getTire, loading } = useTires({ carId });
-  const { loading: loadingStints, getTireStints } = useStints({ carId });
-  const { loading: loadingTracks, getTrack } = useTracks();
+  const { getActiveTire, loadingActiveTires } = useActiveTires({ carId });
+  const { loadingActiveStints, getTireStints } = useActiveStints({ carId });
+  const { loadingActiveTracks, getTrack } = useActiveTracks();
   const navigate = useNavigate();
 
   const tireStints = useMemo(
-    () => !loadingStints && tireId && getTireStints(tireId),
-    [loadingStints, tireId, getTireStints]
+    () => !loadingActiveStints && tireId && getTireStints(tireId),
+    [loadingActiveStints, tireId, getTireStints]
   );
 
   return (
     <Table.Tr>
       <Table.Td>{title}</Table.Td>
       <Table.Td>
-        {!loading && tireId ? getTire(tireId)?.name : <Skeleton height={8} width="50%" />}
+        {!loadingActiveTires && tireId ? (
+          getActiveTire(tireId)?.name
+        ) : (
+          <Skeleton height={8} width="50%" />
+        )}
       </Table.Td>
       <Table.Td>
-        {loadingStints || loadingTracks ? (
+        {loadingActiveStints || loadingActiveTracks ? (
           <Skeleton height={8} width="40%" />
         ) : tireStints ? (
           tireStints.reduce((total, { laps }) => total + laps, 0) +
@@ -126,8 +143,10 @@ export const Stints: FC = () => {
 
   useEffect(() => scrollToRef.current?.scrollIntoView({ behavior: 'smooth' }), [scrollToRef]);
 
-  const { loading: loadingStints, stints } = useStints({ carId });
-  const { getTrack, loading: loadingTracks } = useTracks();
+  const [showArchived, setShowArchived] = useState<boolean>(false);
+  const { loadingActiveStints, activeStints } = useActiveStints({ carId, archived: showArchived });
+  const { loadingArchivedStints, archivedStints } = useArchivedStints({ carId });
+  const { getTrack } = useActiveTracks();
 
   const openStintModal = (props?: StintProps) => {
     if (!carId) throw new Error('CarId is undefined.');
@@ -137,19 +156,96 @@ export const Stints: FC = () => {
       withCloseButton: false
     });
   };
-
   return (
     <>
       <TitleWithButton
         buttonIcon={<IconPlus />}
         buttonText="Add stint"
         onButtonClick={() => openStintModal()}
+        centerElement={
+          <SegmentToggle
+            value={showArchived ? 'archived' : 'active'}
+            onChange={(v) => setShowArchived(v === 'archived')}
+          />
+        }
       >
         Stints
       </TitleWithButton>
-      {loadingStints || loadingTracks ? (
+      {showArchived ? (
+        loadingArchivedStints ? (
+          <Loader className="mt-8" />
+        ) : !archivedStints || archivedStints.length === 0 ? (
+          <div className="mt-4">No archived stints found</div>
+        ) : (
+          <Accordion
+            defaultValue={openStintId}
+            chevronPosition="left"
+            variant="separated"
+            className="mt-4"
+          >
+            {archivedStints?.map(
+              ({
+                stintId,
+                trackId,
+                carId,
+                date,
+                laps,
+                leftFront,
+                leftRear,
+                rightFront,
+                rightRear,
+                note
+              }) => {
+                const track = getTrack(trackId);
+                return (
+                  <Accordion.Item
+                    value={stintId}
+                    key={stintId}
+                    {...(openStintId === stintId && { ref: scrollToRef })}
+                  >
+                    <AccordionControl
+                      stintId={stintId}
+                      carId={carId}
+                      openStintModal={() => openStintModal({ stintId, carId })}
+                      archived={showArchived}
+                    >
+                      {track?.name} - {date.toISOString().substring(0, 10)} - {laps} laps{' '}
+                      <i>{track && '(' + formatDistance(track.length * laps) + ')'}</i>
+                    </AccordionControl>
+                    <Accordion.Panel>
+                      {note && (
+                        <Text size="sm" c="dimmed" fw={400}>
+                          Notes: {note}
+                        </Text>
+                      )}
+                      <Table>
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th>Tire position</Table.Th>
+                            <Table.Th>Tire name</Table.Th>
+                            <Table.Th>Total tire usage</Table.Th>
+                            <Table.Th></Table.Th>
+                          </Table.Tr>
+                        </Table.Thead>
+
+                        <Table.Tbody>
+                          <TireTableRow title="Left Front" tireId={leftFront} />
+                          <TireTableRow title="Right Front" tireId={rightFront} />
+                          <TireTableRow title="Left Rear" tireId={leftRear} />
+                          <TireTableRow title="Right Rear" tireId={rightRear} />
+                        </Table.Tbody>
+                      </Table>
+                      <Divider />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                );
+              }
+            )}
+          </Accordion>
+        )
+      ) : loadingActiveStints ? (
         <Loader />
-      ) : !stints || stints.length === 0 ? (
+      ) : !activeStints || activeStints.length === 0 ? (
         <div className="mt-4">No stints added yet</div>
       ) : (
         <Accordion
@@ -158,7 +254,7 @@ export const Stints: FC = () => {
           variant="separated"
           className="mt-4"
         >
-          {stints?.map(
+          {activeStints?.map(
             ({
               stintId,
               trackId,
@@ -182,6 +278,7 @@ export const Stints: FC = () => {
                     stintId={stintId}
                     carId={carId}
                     openStintModal={() => openStintModal({ stintId, carId })}
+                    archived={showArchived}
                   >
                     {track?.name} - {date.toISOString().substring(0, 10)} - {laps} laps{' '}
                     <i>{track && '(' + formatDistance(track.length * laps) + ')'}</i>

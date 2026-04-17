@@ -2,7 +2,7 @@ import { Button, Checkbox, Group, LoadingOverlay, Stack, TextInput, Title } from
 import { useForm, zodResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useMutation } from '@renderer/hooks/useMutation';
-import { useTires } from '@renderer/hooks/useTires';
+import { useActiveTires } from '@renderer/hooks/useTires';
 import { Tire } from '@shared/model';
 import { tireSchema } from '../../../../shared/schema/tireSchema';
 import { FC } from 'react';
@@ -13,7 +13,7 @@ export interface AddTireProps {
 }
 
 export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
-  const { getTire, loading } = useTires({ carId });
+  const { getActiveTire, loadingActiveTires } = useActiveTires({ carId });
 
   const form = useForm<Partial<Tire>>({
     mode: 'uncontrolled',
@@ -24,8 +24,8 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
   if (!form.initialized) {
     if (!tireId) {
       form.initialize({});
-    } else if (!loading) {
-      const tire = getTire(tireId);
+    } else if (!loadingActiveTires) {
+      const tire = getActiveTire(tireId);
       if (tire) {
         form.initialize(tire);
       } else {
@@ -51,7 +51,16 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
     mutationFn: async () => {
       form.setSubmitting(true);
       const tire = form.getValues();
-      await window.api.putTire({ ...tire, carId });
+      await window.api.putTire({
+        ...tire,
+        carId,
+        name: tire.name ?? '',
+        allowedLf: tire.allowedLf ?? false,
+        allowedRf: tire.allowedRf ?? false,
+        allowedLr: tire.allowedLr ?? false,
+        allowedRr: tire.allowedRr ?? false,
+        archived: tire.archived ?? false
+      });
     },
     onError: () => form.setSubmitting(false)
   });
