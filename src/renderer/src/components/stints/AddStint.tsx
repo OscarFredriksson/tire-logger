@@ -13,7 +13,7 @@ import {
   Title
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
-import { useForm, zodResolver } from '@mantine/form';
+import { useForm, schemaResolver } from '@mantine/form';
 import { FC, useMemo } from 'react';
 import { useTires } from '@renderer/hooks/useTires';
 import { useTracks } from '@renderer/hooks/useTracks';
@@ -38,7 +38,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
   const form = useForm<Partial<Stint>>({
     mode: 'uncontrolled',
     validateInputOnChange: true,
-    validate: zodResolver(stintSchema)
+    validate: schemaResolver(stintSchema, { sync: true })
   });
 
   if (!form.initialized) {

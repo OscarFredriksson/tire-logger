@@ -5,6 +5,7 @@ export const themeConstants = {
 };
 
 export const theme = createTheme({
+  defaultRadius: 'sm',
   components: {
     Button: Button.extend({
       defaultProps: {

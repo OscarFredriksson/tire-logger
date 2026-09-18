@@ -1,5 +1,5 @@
 import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
+import { useForm, schemaResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useCars } from '@renderer/hooks/useCars';
 import { useMutation } from '@renderer/hooks/useMutation';
@@ -20,7 +20,7 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
   const form = useForm<CarForm>({
     mode: 'uncontrolled',
     validateInputOnChange: true,
-    validate: zodResolver(carSchema)
+    validate: schemaResolver(carSchema, { sync: true })
   });
 
   if (!form.initialized) {

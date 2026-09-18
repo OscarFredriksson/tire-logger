@@ -1,8 +1,16 @@
 import './style.css';
 
-import { Center, Loader, MantineProvider, Stack, Text } from '@mantine/core';
+import {
+  Center,
+  Loader,
+  MantineProvider,
+  Stack,
+  Text,
+  v8CssVariablesResolver
+} from '@mantine/core';
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
+import { theme } from './theme';
 
 export const SplashContent = () => {
   return (
@@ -17,7 +25,11 @@ export const SplashContent = () => {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
-    <MantineProvider defaultColorScheme="dark">
+    <MantineProvider
+      defaultColorScheme="dark"
+      theme={theme}
+      cssVariablesResolver={v8CssVariablesResolver}
+    >
       <SplashContent />
     </MantineProvider>
   </StrictMode>

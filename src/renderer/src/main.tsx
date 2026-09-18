@@ -4,7 +4,7 @@ import '@mantine/notifications/styles.css';
 
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
-import { MantineProvider } from '@mantine/core';
+import { MantineProvider, v8CssVariablesResolver } from '@mantine/core';
 import { App } from './App';
 import { HashRouter, Route, Routes } from 'react-router';
 import { ModalsProvider } from '@mantine/modals';
@@ -53,9 +53,13 @@ window.electron.ipcRenderer.on('export-complete', (_event, { success, message })
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <MantineProvider defaultColorScheme="dark" theme={theme}>
+      <MantineProvider
+        defaultColorScheme="dark"
+        theme={theme}
+        cssVariablesResolver={v8CssVariablesResolver}
+      >
         <ErrorBoundary>
-          <Notifications />
+          <Notifications pauseResetOnHover="notification" />
           <HashRouter>
             <ModalsProvider>
               <Routes>

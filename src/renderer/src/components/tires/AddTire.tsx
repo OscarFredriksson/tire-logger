@@ -1,5 +1,5 @@
 import { Button, Checkbox, Group, LoadingOverlay, Stack, TextInput, Title } from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
+import { useForm, schemaResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useMutation } from '@renderer/hooks/useMutation';
 import { useTires } from '@renderer/hooks/useTires';
@@ -18,7 +18,7 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
   const form = useForm<Partial<Tire>>({
     mode: 'uncontrolled',
     validateInputOnChange: true,
-    validate: zodResolver(tireSchema)
+    validate: schemaResolver(tireSchema, { sync: true })
   });
 
   if (!form.initialized) {
