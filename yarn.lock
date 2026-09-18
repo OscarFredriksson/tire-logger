@@ -2245,14 +2245,6 @@ buffer-from@^1.0.0:
   resolved "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
 
-builder-util-runtime@9.3.1:
-  version "9.3.1"
-  resolved "https://registry.npmjs.org/builder-util-runtime/-/builder-util-runtime-9.3.1.tgz"
-  integrity sha512-2/egrNDDnRaxVwK3A+cJq6UOlqOdedGA7JPqCeJjN2Zjk1/QB/6QUi3b714ScIGS7HafFXTyzJEOr5b44I3kvQ==
-  dependencies:
-    debug "^4.3.4"
-    sax "^1.2.4"
-
 builder-util-runtime@9.7.0:
   version "9.7.0"
   resolved "https://registry.npmjs.org/builder-util-runtime/-/builder-util-runtime-9.7.0.tgz"
@@ -2738,18 +2730,18 @@ electron-to-chromium@^1.5.427:
   resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.431.tgz"
   integrity sha512-AAVihz2YwJeOdAynX8MUtqpvjY0gaiARp/7+r4kwqgzqXMrfG1qDN7vwT80uxAoOQRPcZH8t73EI+CA/1OJN8A==
 
-electron-updater@^6.6.2:
-  version "6.6.2"
-  resolved "https://registry.npmjs.org/electron-updater/-/electron-updater-6.6.2.tgz"
-  integrity sha512-Cr4GDOkbAUqRHP5/oeOmH/L2Bn6+FQPxVLZtPbcmKZC63a1F3uu5EefYOssgZXG3u/zBlubbJ5PJdITdMVggbw==
+electron-updater@^6.8.9:
+  version "6.8.9"
+  resolved "https://registry.yarnpkg.com/electron-updater/-/electron-updater-6.8.9.tgz#21e3e2400ee3a58b7496f0a023d95d7ab1dae019"
+  integrity sha512-ZhVxM9iGONUpZGI1FxdMRgJjUFXi7AYGVa5PwKlO1tV1/4zDxQmfKpXOHVztKrd6L9rLcFjERvi1Mf2vxyTkig==
   dependencies:
-    builder-util-runtime "9.3.1"
+    builder-util-runtime "9.7.0"
     fs-extra "^10.1.0"
     js-yaml "^4.1.0"
     lazy-val "^1.0.5"
     lodash.escaperegexp "^4.1.2"
     lodash.isequal "^4.5.0"
-    semver "^7.6.3"
+    semver "~7.7.3"
     tiny-typed-emitter "^2.1.0"
 
 electron-vite@^5:
