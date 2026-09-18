@@ -36,7 +36,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5",
-    "electron": "^34.2.0",
+    "electron": "^39.8.10",
     "electron-builder": "^26.16.1",
     "electron-vite": "^5",
     "eslint": "^9.20.1",
