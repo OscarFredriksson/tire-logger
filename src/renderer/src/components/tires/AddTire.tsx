@@ -50,8 +50,8 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
     queryKey: ['tires', carId],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const tire = form.getValues();
-      await window.api.putTire({ ...tire, carId });
+      const tire = tireSchema.parse(form.getValues());
+      await window.api.putTire({ ...tire, carId, tireId });
     },
     onError: () => form.setSubmitting(false)
   });

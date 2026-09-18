@@ -126,8 +126,8 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     queryKey: ['stints', carId],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const { date, ...stint } = form.getValues();
-      await window.api.putStint({ ...stint, date: new Date(date!) });
+      const stint = stintSchema.parse(form.getValues());
+      await window.api.putStint({ ...stint, stintId });
     },
     onError: () => form.setSubmitting(false)
   });

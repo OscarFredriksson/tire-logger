@@ -44,8 +44,8 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
     queryKey: ['tracks'],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const track = form.getValues();
-      await window.api.putTrack(track);
+      const track = trackSchema.parse(form.getValues());
+      await window.api.putTrack({ ...track, trackId });
     },
     onError: () => form.setSubmitting(false)
   });

@@ -42,8 +42,8 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
     queryKey: ['cars'],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const car = form.getValues();
-      await window.api.putCar(car);
+      const car = carSchema.parse(form.getValues());
+      await window.api.putCar({ ...car, carId });
     },
     onError: () => form.setSubmitting(false)
   });
