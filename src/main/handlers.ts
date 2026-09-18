@@ -99,7 +99,8 @@ const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
 const getStints = (_, carId: string) => {
   return queryStints.all(carId).map((stint) => ({
     ...stint,
-    date: new Date(stint.date)
+    date: new Date(stint.date),
+    note: stint.note ?? ''
   }));
 };
 

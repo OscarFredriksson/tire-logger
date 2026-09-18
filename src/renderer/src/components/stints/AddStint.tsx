@@ -23,6 +23,7 @@ import { formatDistance } from '@renderer/utils/distanceUtils';
 import { Stint } from '@shared/model';
 import { useMutation } from '@renderer/hooks/useMutation';
 import { stintSchema } from '../../../../shared/schema/stintSchema';
+import dayjs from 'dayjs';
 
 export interface StintProps {
   carId: string;
@@ -139,7 +140,19 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
         <Loader />
       ) : (
         <Stack className="mt-5">
-          <DateTimePicker label="Stint time" {...form.getInputProps('date')} />
+          <DateTimePicker
+            key={form.key('date')}
+            label="Stint time"
+            {...form.getInputProps('date')}
+            defaultValue={
+              form.getValues().date
+                ? dayjs(form.getValues().date).format('YYYY-MM-DD HH:mm:ss')
+                : null
+            }
+            onChange={(value) =>
+              form.getInputProps('date').onChange(value ? dayjs(value).toDate() : undefined)
+            }
+          />
           <Select
             label="Track"
             placeholder="Select track"
