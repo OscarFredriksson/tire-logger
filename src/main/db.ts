@@ -1,4 +1,5 @@
 import Database, { Statement } from 'better-sqlite3';
+import type { Database as BetterSqlite3Database } from 'better-sqlite3';
 import { Car, Stint, Tire, Track } from '../shared/model';
 import { app } from 'electron';
 import path from 'path';
@@ -11,12 +12,17 @@ const dbPath =
     : path.join(app.getPath('userData'), 'tire-logger.db');
 
 const db = new Database(dbPath, {});
+// Will only add the archived flag to existing records
+migrateAddArchivedFlag(db);
+
 db.pragma('journal_mode = WAL');
 
-db.prepare("CREATE TABLE IF NOT EXISTS cars('carId' varchar PRIMARY KEY, 'name' varchar);").run();
+db.prepare(
+  "CREATE TABLE IF NOT EXISTS cars('carId' varchar PRIMARY KEY, 'name' varchar, 'archived' INTEGER DEFAULT 0);"
+).run();
 
 db.prepare(
-  "CREATE TABLE IF NOT EXISTS tracks('trackId' varchar PRIMARY KEY, 'name' varchar, 'length' int);"
+  "CREATE TABLE IF NOT EXISTS tracks('trackId' varchar PRIMARY KEY, 'name' varchar, 'length' int, 'archived' INTEGER DEFAULT 0);"
 ).run();
 
 db.prepare(
@@ -28,6 +34,7 @@ db.prepare(
     "'allowedRf' int, " +
     "'allowedLr' int, " +
     "'allowedRr' int, " +
+    "'archived' INTEGER DEFAULT 0, " +
     'FOREIGN KEY(carId) REFERENCES cars(carId) ON DELETE CASCADE);'
 ).run();
 
@@ -43,6 +50,7 @@ db.prepare(
     "'leftRear' varchar NOT NULL, " +
     "'rightRear' varchar NOT NULL, " +
     "'note' varchar, " +
+    "'archived' INTEGER DEFAULT 0, " +
     'FOREIGN KEY(trackId) REFERENCES tracks(trackId) ON DELETE CASCADE, ' +
     'FOREIGN KEY(carId) REFERENCES cars(carId) ON DELETE CASCADE, ' +
     'FOREIGN KEY(leftFront) REFERENCES tires(tireId) ON DELETE CASCADE, ' +
@@ -51,52 +59,85 @@ db.prepare(
     'FOREIGN KEY(rightRear) REFERENCES tires(tireId) ON DELETE CASCADE);'
 ).run();
 
-export const queryCars: Statement<[], Car> = db.prepare('SELECT * FROM cars');
-
-export const insertCar: Statement = db.prepare('INSERT INTO cars (carId, name) VALUES (?, ?);');
-
-export const updateCar: Statement = db.prepare('UPDATE cars SET name = ? WHERE carId = ?;');
-
-export const deleteCarId: Statement = db.prepare('DELETE FROM cars WHERE carId = ?;');
-
-export const queryTracks: Statement<[], Track> = db.prepare('SELECT * FROM tracks');
-
-export const updateTrack: Statement = db.prepare(
-  'UPDATE tracks SET name = ?, length = ? WHERE trackId = ?;'
+// Queries: Only fetch non-archived records
+export const queryCars: Statement<[number], Car> = db.prepare(
+  'SELECT * FROM cars WHERE archived = ?'
+);
+export const queryTracks: Statement<[number], Track> = db.prepare(
+  'SELECT * FROM tracks WHERE archived = ?'
+);
+export const queryStints: Statement<[string, number], Stint> = db.prepare(
+  'SELECT * FROM stints WHERE carId IS ? AND archived = ? ORDER BY date DESC;'
+);
+export const queryTires: Statement<[string, number], Tire> = db.prepare(
+  'SELECT * FROM tires WHERE carId IS ? AND archived = ?;'
 );
 
+// Inserts: Set archived to 0 by default
+export const insertCar: Statement = db.prepare(
+  'INSERT INTO cars (carId, name, archived) VALUES (?, ?, 0);'
+);
 export const insertTrack: Statement = db.prepare(
-  'INSERT INTO tracks (trackId, name, length) VALUES (?, ?, ?);'
+  'INSERT INTO tracks (trackId, name, length, archived) VALUES (?, ?, ?, 0);'
 );
-
-export const deleteTrackId: Statement = db.prepare('DELETE FROM tracks WHERE trackId = ?;');
-
-export const updateStint: Statement = db.prepare(
-  'UPDATE stints SET trackId = ?, date = ?, laps = ?, leftFront = ?, rightFront = ?, leftRear = ?, rightRear = ?, note = ? WHERE stintId = ?;'
-);
-
-export const insertStint: Statement = db.prepare(
-  'INSERT INTO stints (stintId, trackId, carId, date, laps, leftFront, rightFront, leftRear, rightRear, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);'
-);
-
-export const queryStints: Statement<[string], Stint> = db.prepare(
-  'SELECT * FROM stints WHERE carId IS ? ORDER BY date DESC;'
-);
-
-export const queryTires: Statement<[string], Tire> = db.prepare(
-  'SELECT * FROM tires WHERE carId IS ?;'
-);
-
-export const updateTire: Statement = db.prepare(
-  'UPDATE tires SET name = ?, allowedLf = ?, allowedRf = ?, allowedLr = ?, allowedRr = ? WHERE tireId = ?;'
-);
-
 export const insertTire: Statement = db.prepare(
-  'INSERT INTO tires (tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr) VALUES (?, ?, ?, ?, ?, ?, ?);'
+  'INSERT INTO tires (tireId, name, carId, allowedLf, allowedRf, allowedLr, allowedRr, archived) VALUES (?, ?, ?, ?, ?, ?, ?, 0);'
+);
+export const insertStint: Statement = db.prepare(
+  'INSERT INTO stints (stintId, trackId, carId, date, laps, leftFront, rightFront, leftRear, rightRear, note, archived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0);'
 );
 
-export const deleteTireId: Statement = db.prepare('DELETE FROM tires WHERE tireId = ?;');
+// Updates: You may want to allow updating the archived flag if needed
+export const updateCar: Statement = db.prepare(
+  'UPDATE cars SET name = ?, archived = ? WHERE carId = ?;'
+);
+export const updateTrack: Statement = db.prepare(
+  'UPDATE tracks SET name = ?, length = ?, archived = ? WHERE trackId = ?;'
+);
+export const updateTire: Statement = db.prepare(
+  'UPDATE tires SET name = ?, allowedLf = ?, allowedRf = ?, allowedLr = ?, allowedRr = ?, archived = ? WHERE tireId = ?;'
+);
+export const updateStint: Statement = db.prepare(
+  'UPDATE stints SET trackId = ?, date = ?, laps = ?, leftFront = ?, rightFront = ?, leftRear = ?, rightRear = ?, note = ?, archived = ? WHERE stintId = ?;'
+);
 
+// Archive instead of delete: Set archived = 1
+export const archiveCarId: Statement = db.prepare('UPDATE cars SET archived = 1 WHERE carId = ?;');
+export const archiveTrackId: Statement = db.prepare(
+  'UPDATE tracks SET archived = 1 WHERE trackId = ?;'
+);
+export const archiveTireId: Statement = db.prepare(
+  'UPDATE tires SET archived = 1 WHERE tireId = ?;'
+);
+export const archiveStintId: Statement = db.prepare(
+  'UPDATE stints SET archived = 1 WHERE stintId = ?;'
+);
+export const archiveTiresByCar: Statement = db.prepare(
+  'UPDATE tires SET archived = 1 WHERE carId = ?;'
+);
+export const archiveStintsByCar: Statement = db.prepare(
+  'UPDATE stints SET archived = 1 WHERE carId = ?;'
+);
+export const archiveStintsByTrackId: Statement = db.prepare(
+  'UPDATE stints SET archived = 1 WHERE trackId = ?;'
+);
+
+// Restore resources
+export const restoreTireId: Statement = db.prepare(
+  'UPDATE tires SET archived = 0 WHERE tireId = ?;'
+);
+export const restoreTrackId: Statement = db.prepare(
+  'UPDATE tracks SET archived = 0 WHERE trackId = ?;'
+);
+export const restoreCarId: Statement = db.prepare('UPDATE cars SET archived = 0 WHERE carId = ?;');
+export const restoreStintId: Statement = db.prepare(
+  'UPDATE stints SET archived = 0 WHERE stintId = ?;'
+);
+
+// Permanent delete (if needed)
+export const deleteCarId: Statement = db.prepare('DELETE FROM cars WHERE carId = ?;');
+export const deleteTrackId: Statement = db.prepare('DELETE FROM tracks WHERE trackId = ?;');
+export const deleteTireId: Statement = db.prepare('DELETE FROM tires WHERE tireId = ?;');
 export const deleteStintId: Statement = db.prepare('DELETE FROM stints WHERE stintId = ?;');
 
 export const getAllTableNames: Statement<[], { name: string }> = db.prepare(
@@ -152,57 +193,6 @@ function importTables(tableData: Record<string, any[]>) {
     console.log(`Imported ${rows.length} rows into ${tableName}`);
   }
 }
-
-// Alternative: Import with conflict resolution
-// export function importDataWithOptions(
-//   data: any,
-//   options: {
-//     conflictResolution: 'replace' | 'ignore' | 'fail';
-//     clearExisting?: boolean;
-//   }
-// ) {
-//   const transaction = db.transaction(() => {
-//     const tableData = data.data || data;
-
-//     for (const [tableName, rows] of Object.entries(tableData)) {
-//       if (!Array.isArray(rows) || rows.length === 0) continue;
-
-//       // Clear existing data if requested
-//       if (options.clearExisting) {
-//         db.prepare(`DELETE FROM ${tableName}`).run();
-//       }
-
-//       const columns = Object.keys(rows[0]);
-//       const placeholders = columns.map(() => '?').join(', ');
-
-//       let insertQuery = '';
-//       switch (options.conflictResolution) {
-//         case 'replace':
-//           insertQuery = `INSERT OR REPLACE INTO ${tableName}`;
-//           break;
-//         case 'ignore':
-//           insertQuery = `INSERT OR IGNORE INTO ${tableName}`;
-//           break;
-//         case 'fail':
-//         default:
-//           insertQuery = `INSERT INTO ${tableName}`;
-//           break;
-//       }
-
-//       const insertStmt = db.prepare(`
-//         ${insertQuery} (${columns.join(', ')})
-//         VALUES (${placeholders})
-//       `);
-
-//       for (const row of rows) {
-//         const values = columns.map((col) => row[col]);
-//         insertStmt.run(...values);
-//       }
-//     }
-//   });
-
-//   transaction();
-// }
 
 export function importDataWithOptions(
   data: any,
@@ -351,4 +341,23 @@ function insertRecord(db: any, tableName: string, record: any, columns: string[]
   db.prepare(`INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`).run(
     ...values
   );
+}
+export function migrateAddArchivedFlag(db: BetterSqlite3Database) {
+  const tables = ['cars', 'tires', 'stints', 'tracks'];
+  const tableExists = db.prepare<[string], { ok: number }>(
+    "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?) AS ok"
+  );
+
+  for (const table of tables) {
+    const row = tableExists.get(table);
+    if (!row || row.ok !== 1) continue;
+
+    const columns = db.prepare('PRAGMA table_info(' + table + ')').all() as Array<{ name: string }>;
+    const hasArchived = columns.some((col) => col.name === 'archived');
+
+    if (!hasArchived) {
+      db.prepare('ALTER TABLE ' + table + ' ADD COLUMN archived INTEGER DEFAULT 0').run();
+      console.log('Added archived column to ' + table);
+    }
+  }
 }

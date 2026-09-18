@@ -2,7 +2,7 @@ import { Button, Group, LoadingOverlay, NumberInput, Stack, TextInput, Title } f
 import { useForm, zodResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useMutation } from '@renderer/hooks/useMutation';
-import { useTracks } from '@renderer/hooks/useTracks';
+import { useActiveTracks } from '@renderer/hooks/useTracks';
 import { trackSchema } from '../../../../shared/schema/trackSchema';
 import { FC } from 'react';
 
@@ -17,7 +17,7 @@ interface TrackForm {
 }
 
 export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
-  const { getTrack, loading } = useTracks();
+  const { getTrack, loadingActiveTracks } = useActiveTracks();
 
   const form = useForm<TrackForm>({
     mode: 'uncontrolled',
@@ -28,7 +28,7 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
   if (!form.initialized) {
     if (!trackId) {
       form.initialize({});
-    } else if (!loading) {
+    } else if (!loadingActiveTracks) {
       const track = getTrack(trackId);
       if (track) {
         form.initialize(track);
@@ -45,7 +45,7 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
     mutationFn: async () => {
       form.setSubmitting(true);
       const track = form.getValues();
-      await window.api.putTrack(track);
+      await window.api.putTrack({ ...track, name: track.name ?? '', length: track.length ?? 0 });
     },
     onError: () => form.setSubmitting(false)
   });

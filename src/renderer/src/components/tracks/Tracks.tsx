@@ -7,7 +7,7 @@ import {
   IconPlus,
   IconTrash
 } from '@tabler/icons-react';
-import { useTracks } from '@renderer/hooks/useTracks';
+import { useActiveTracks, useArchivedTracks } from '@renderer/hooks/useTracks';
 import {
   ActionIcon,
   Alert,
@@ -24,23 +24,25 @@ import { AddTrack, AddTrackProps } from './AddTrack';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { queryClient } from '@renderer/main';
+import SegmentToggle from '../common/SegmentToggle';
 
 interface TrackMenuProps {
   trackId: string;
   trackName: string;
   openTrackModal: (props?: AddTrackProps) => void;
+  archived?: boolean;
 }
 
-const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal }) => {
+const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal, archived }) => {
   const [opened, setOpened] = useState<boolean>(false);
 
   const onDelete = () => {
     modals.openConfirmModal({
-      title: 'Delete track',
+      title: 'Archive track',
       children: (
         <Stack justify="center">
           <Text>
-            Are you sure you want to delete the track{' '}
+            Are you sure you want to archive the track{' '}
             <Text span inherit fw={800}>
               {trackName}
             </Text>
@@ -48,19 +50,46 @@ const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal }) =
           </Text>
 
           <Alert variant="light" color="red" icon={<IconInfoCircle />}>
-            This will also delete all stints where this track is used.
+            This will also archive all stints where this track is used.
           </Alert>
         </Stack>
       ),
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
+      labels: { confirm: 'Archive', cancel: 'Cancel' },
       withCloseButton: false,
-      onConfirm: () => onConfirmDelete(),
+      onConfirm: () => onConfirmArchive(),
       onAbort: () => modals.closeAll()
     });
   };
 
-  const onConfirmDelete = () => {
-    window.api.deleteTrack(trackId);
+  const onRestore = () => {
+    modals.openConfirmModal({
+      title: 'Restore track',
+      children: (
+        <Stack justify="center">
+          <Text>
+            Are you sure you want to restore the track{' '}
+            <Text span inherit fw={800}>
+              {trackName}
+            </Text>
+            ?
+          </Text>
+        </Stack>
+      ),
+      labels: { confirm: 'Restore', cancel: 'Cancel' },
+      withCloseButton: false,
+      onConfirm: () => onConfirmRestore(),
+      onAbort: () => modals.closeAll()
+    });
+  };
+
+  const onConfirmArchive = () => {
+    window.api.archiveTrack(trackId);
+    queryClient.invalidateQueries({ queryKey: ['tracks'] });
+    modals.closeAll();
+  };
+
+  const onConfirmRestore = () => {
+    window.api.restoreTrack(trackId);
     queryClient.invalidateQueries({ queryKey: ['tracks'] });
     modals.closeAll();
   };
@@ -76,16 +105,24 @@ const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal }) =
         <Menu.Item leftSection={<IconEdit size={14} />} onClick={() => openTrackModal({ trackId })}>
           Edit track
         </Menu.Item>
-        <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
-          Delete track
-        </Menu.Item>
+        {(archived && (
+          <Menu.Item leftSection={<IconTrash size={14} />} onClick={onRestore}>
+            Restore track
+          </Menu.Item>
+        )) || (
+          <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={onDelete}>
+            Archive track
+          </Menu.Item>
+        )}
       </Menu.Dropdown>
     </Menu>
   );
 };
 
 export const Tracks: FC = () => {
-  const { loading, tracks } = useTracks();
+  const [showArchived, setShowArchived] = useState<boolean>(false);
+  const { loadingActiveTracks, activeTracks } = useActiveTracks();
+  const { loadingArchivedTracks, archivedTracks } = useArchivedTracks();
 
   const openTrackModal = (props?: AddTrackProps) => {
     modals.open({
@@ -100,21 +137,55 @@ export const Tracks: FC = () => {
         buttonIcon={<IconPlus />}
         buttonText="Add track"
         onButtonClick={openTrackModal}
+        centerElement={
+          <SegmentToggle
+            value={showArchived ? 'archived' : 'active'}
+            onChange={(v) => setShowArchived(v === 'archived')}
+          />
+        }
       >
         Tracks
       </TitleWithButton>
-      {loading ? (
+      {showArchived ? (
+        loadingArchivedTracks ? (
+          <Loader className="mt-8" />
+        ) : !archivedTracks || archivedTracks.length === 0 ? (
+          <div className="mt-4">No archived tracks found</div>
+        ) : (
+          <Flex className="mt-2" direction="column" gap={10}>
+            {archivedTracks?.map(({ trackId, name, length }) => (
+              <Card key={'track-' + trackId} padding={12}>
+                <Group>
+                  <Title order={5}>{name}</Title>
+                  <Text c="dimmed">Length: {formatDistance(length)}</Text>
+                  <TrackMenu
+                    trackId={trackId}
+                    trackName={name}
+                    openTrackModal={openTrackModal}
+                    archived={showArchived}
+                  />
+                </Group>
+              </Card>
+            ))}
+          </Flex>
+        )
+      ) : loadingActiveTracks ? (
         <Loader className="mt-8" />
-      ) : !tracks || tracks.length === 0 ? (
+      ) : !activeTracks || activeTracks.length === 0 ? (
         <div className="mt-4">No tracks added yet</div>
       ) : (
         <Flex className="mt-2" direction="column" gap={10}>
-          {tracks?.map(({ trackId, name, length }) => (
+          {activeTracks?.map(({ trackId, name, length }) => (
             <Card key={'track-' + trackId} padding={12}>
               <Group>
                 <Title order={5}>{name}</Title>
                 <Text c="dimmed">Length: {formatDistance(length)}</Text>
-                <TrackMenu trackId={trackId} trackName={name} openTrackModal={openTrackModal} />
+                <TrackMenu
+                  trackId={trackId}
+                  trackName={name}
+                  openTrackModal={openTrackModal}
+                  archived={showArchived}
+                />
               </Group>
             </Card>
           ))}

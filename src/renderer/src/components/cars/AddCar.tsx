@@ -1,7 +1,7 @@
 import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
 import { useForm, zodResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
-import { useCars } from '@renderer/hooks/useCars';
+import { useActiveCar } from '@renderer/hooks/useCars';
 import { useMutation } from '@renderer/hooks/useMutation';
 import { carSchema } from '../../../../shared/schema/carSchema';
 import { FC } from 'react';
@@ -15,7 +15,7 @@ interface CarForm {
 }
 
 export const AddCar: FC<AddCarProps> = ({ carId }) => {
-  const { loading, getCar } = useCars();
+  const { loadingActiveCars, getCar } = useActiveCar();
 
   const form = useForm<CarForm>({
     mode: 'uncontrolled',
@@ -26,7 +26,7 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
   if (!form.initialized) {
     if (!carId) {
       form.initialize({});
-    } else if (!loading) {
+    } else if (!loadingActiveCars) {
       const car = getCar(carId);
       if (car) {
         form.initialize(car);
@@ -43,7 +43,7 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
     mutationFn: async () => {
       form.setSubmitting(true);
       const car = form.getValues();
-      await window.api.putCar(car);
+      await window.api.putCar({ ...car, name: car.name ?? '' });
     },
     onError: () => form.setSubmitting(false)
   });

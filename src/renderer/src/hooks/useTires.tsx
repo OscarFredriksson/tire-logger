@@ -9,43 +9,43 @@ import { generatePath, useNavigate } from 'react-router';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { useErrorBoundary } from 'react-error-boundary';
 
-interface UseTiresProps {
+interface UseActiveTiresProps {
   carId?: string;
 }
 
-interface UseTires {
-  loading: boolean;
-  tires?: Tire[];
-  getTire: (tireId: string) => Tire | undefined;
-  deleteTire: (tireId: string) => void;
+interface UseActiveTires {
+  loadingActiveTires: boolean;
+  activeTires?: Tire[];
+  getActiveTire: (tireId: string) => Tire | undefined;
+  archiveTire: (tireId: string) => void;
 }
 
-export const useTires = ({ carId }: UseTiresProps): UseTires => {
+export const useActiveTires = ({ carId }: UseActiveTiresProps): UseActiveTires => {
   const navigate = useNavigate();
   const { showBoundary } = useErrorBoundary();
 
-  const { data: tires, isLoading } = useQuery({
-    queryKey: ['tires', carId],
-    queryFn: () => window.api.getTires(carId!)
+  const { data: activeTires, isLoading } = useQuery({
+    queryKey: ['tires', carId, false],
+    queryFn: () => window.api.getTires(carId!, false)
   });
 
-  const { mutate: confirmDeleteTire } = useMutation({
-    operationType: 'delete',
+  const { mutate: confirmArchiveTire } = useMutation({
+    operationType: 'archive',
     entityName: 'tire',
     queryKey: ['tires', carId],
-    mutationFn: window.api.deleteTire,
+    mutationFn: window.api.archiveTire,
     onSuccess: () => navigate(generatePath(routes.TIRES, { carId }))
   });
 
   const tireMap = useMemo<Record<string, Tire | undefined>>(
-    () => Object.fromEntries(tires?.map((tire) => [tire.tireId, tire]) || []),
-    [tires]
+    () => Object.fromEntries(activeTires?.map((tire) => [tire.tireId, tire]) || []),
+    [activeTires]
   );
 
-  const getTire = (tireId: string) => tireMap[tireId];
+  const getActiveTire = (tireId: string) => tireMap[tireId];
 
-  const deleteTire = (tireId: string) => {
-    const tire = getTire(tireId);
+  const archiveTire = (tireId: string) => {
+    const tire = getActiveTire(tireId);
 
     if (!tire) {
       showBoundary(new Error(`Tire with id ${tireId} not found`));
@@ -53,32 +53,96 @@ export const useTires = ({ carId }: UseTiresProps): UseTires => {
     }
 
     modals.openConfirmModal({
-      title: 'Delete tire',
+      title: 'Archive tire',
       children: (
         <Stack>
           <Text>
-            Are you sure you want to delete the tire{' '}
+            Are you sure you want to archive the tire{' '}
             <Text span fw={800} inherit>
               {tire.name}
             </Text>
             ?
           </Text>
           <Alert variant="light" color="red" icon={<IconInfoCircle />}>
-            This will also delete all stints where this tire is used.
+            This will also archive all stints where this tire is used.
           </Alert>
         </Stack>
       ),
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
+      labels: { confirm: 'Archive', cancel: 'Cancel' },
       withCloseButton: false,
-      onConfirm: () => confirmDeleteTire(tire.tireId),
+      onConfirm: () => confirmArchiveTire(tire.tireId),
       onAbort: modals.closeAll
     });
   };
 
   return {
-    loading: isLoading,
-    tires,
-    getTire,
-    deleteTire
+    loadingActiveTires: isLoading,
+    activeTires,
+    getActiveTire,
+    archiveTire
+  };
+};
+
+interface UseArchivedTires {
+  carId?: string;
+}
+
+export const useArchivedTires = ({ carId }: UseArchivedTires) => {
+  const navigate = useNavigate();
+  const { showBoundary } = useErrorBoundary();
+
+  const { data: archivedTires, isLoading } = useQuery({
+    queryKey: ['tires', carId, true],
+    queryFn: () => window.api.getTires(carId!, true)
+  });
+
+  const { mutate: confirmRestoreTire } = useMutation({
+    operationType: 'update',
+    entityName: 'tire',
+    queryKey: ['tires', carId],
+    mutationFn: window.api.restoreTire,
+    onSuccess: () => navigate(generatePath(routes.TIRES, { carId }))
+  });
+
+  const tireMap = useMemo<Record<string, Tire | undefined>>(
+    () => Object.fromEntries(archivedTires?.map((tire) => [tire.tireId, tire]) || []),
+    [archivedTires]
+  );
+
+  const getArchivedTire = (tireId: string) => tireMap[tireId];
+
+  const restoreTire = (tireId: string) => {
+    const tire = getArchivedTire(tireId);
+
+    if (!tire) {
+      showBoundary(new Error(`Tire with id ${tireId} not found`));
+      return;
+    }
+
+    modals.openConfirmModal({
+      title: 'Restore tire',
+      children: (
+        <Stack>
+          <Text>
+            Are you sure you want to restore the tire{' '}
+            <Text span fw={800} inherit>
+              {tire.name}
+            </Text>
+            ?
+          </Text>
+        </Stack>
+      ),
+      labels: { confirm: 'Restore', cancel: 'Cancel' },
+      withCloseButton: false,
+      onConfirm: () => confirmRestoreTire(tire.tireId),
+      onAbort: modals.closeAll
+    });
+  };
+
+  return {
+    loadingArchivedTires: isLoading,
+    archivedTires,
+    getArchivedTire,
+    restoreTire
   };
 };

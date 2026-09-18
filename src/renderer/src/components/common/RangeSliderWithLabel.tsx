@@ -25,7 +25,7 @@ export const RangeSliderWithLabel: FC<RangeSliderWithLabelProps> = ({ min, max, 
         color={isChanged ? 'blue' : 'dimmed'}
         label={null}
         min={min}
-        max={max}
+        max={max + 1}
         minRange={0}
         {...props}
       />

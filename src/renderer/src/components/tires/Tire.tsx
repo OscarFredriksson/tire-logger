@@ -18,9 +18,9 @@ import { IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
-import { useTires } from '@renderer/hooks/useTires';
-import { useStints } from '@renderer/hooks/useStints';
-import { useTracks } from '@renderer/hooks/useTracks';
+import { useActiveTires } from '@renderer/hooks/useTires';
+import { useActiveStints } from '@renderer/hooks/useStints';
+import { useActiveTracks } from '@renderer/hooks/useTracks';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TextWithLabel } from '../common/TextWithLabel';
 import { formatDate } from '@renderer/utils/dateUtils';
@@ -48,21 +48,21 @@ export const Tire: FC = () => {
   const { carId, tireId } = useParams();
   const navigate = useNavigate();
 
-  const { loading, getTire, deleteTire } = useTires({ carId });
-  const { loading: loadingStints, getTireStints } = useStints({ carId });
-  const { loading: loadingTracks, getTrack } = useTracks();
+  const { loadingActiveTires, getActiveTire, archiveTire } = useActiveTires({ carId });
+  const { loadingActiveStints, getTireStints } = useActiveStints({ carId });
+  const { loadingActiveTracks, getTrack } = useActiveTracks();
 
-  const tire = useMemo(() => tireId && getTire(tireId), [getTire, tireId]);
+  const tire = useMemo(() => tireId && getActiveTire(tireId), [getActiveTire, tireId]);
 
   const tireStints = useMemo(
-    () => tireId && !loadingStints && getTireStints(tireId),
-    [getTireStints, tireId, loadingStints]
+    () => tireId && !loadingActiveStints && getTireStints(tireId),
+    [getTireStints, tireId, loadingActiveStints]
   );
 
   const enrichedStints = useMemo(
     () =>
       (tireStints &&
-        !loadingTracks &&
+        !loadingActiveTracks &&
         tireStints.map((stint) => {
           const track = getTrack(stint.trackId);
           return {
@@ -72,7 +72,7 @@ export const Tire: FC = () => {
           };
         })) ||
       [],
-    [tireStints, loadingTracks, getTrack]
+    [tireStints, loadingActiveTracks, getTrack]
   );
 
   const [sortBy, setSortBy] = useState<string>();
@@ -102,7 +102,7 @@ export const Tire: FC = () => {
         >
           Back
         </Button>
-        <Title>{loading ? 'Loading Tire' : !tire ? 'Tire not found' : tire.name}</Title>
+        <Title>{loadingActiveTires ? 'Loading Tire' : !tire ? 'Tire not found' : tire.name}</Title>
         {tire && (
           <Group gap="xs">
             <Tooltip label="Edit tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
@@ -114,12 +114,12 @@ export const Tire: FC = () => {
                 <IconEdit size={22} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
+            <Tooltip label="Archive tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
               <ActionIcon
                 variant="filled"
                 color="red"
                 size="lg"
-                onClick={() => deleteTire(tire.tireId)}
+                onClick={() => archiveTire(tire.tireId)}
               >
                 <IconTrash size={22} />
               </ActionIcon>
@@ -127,7 +127,7 @@ export const Tire: FC = () => {
           </Group>
         )}
       </Group>
-      {loading ? (
+      {loadingActiveTires ? (
         <Center className="mt-5">
           <Loader />
         </Center>
@@ -173,7 +173,7 @@ export const Tire: FC = () => {
                 </Text>
               </TextWithLabel>
               <TextWithLabel label="Total distance:">
-                {tireStints && !loadingTracks ? (
+                {tireStints && !loadingActiveTracks ? (
                   formatDistance(
                     tireStints.reduce(
                       (total, { trackId, laps }) => total + laps * (getTrack(trackId)?.length || 0),
@@ -185,7 +185,7 @@ export const Tire: FC = () => {
                 )}
               </TextWithLabel>
               <TextWithLabel label="Used at:">
-                {tireStints && !loadingTracks ? (
+                {tireStints && !loadingActiveTracks ? (
                   <Text>
                     {tireStints
                       .map(({ trackId }) => getTrack(trackId)?.name)

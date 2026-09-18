@@ -19,5 +19,6 @@ export const stintSchema = z.object({
   rightRear: z
     .string({ message: 'Right Rear tire is required' })
     .min(1, { message: 'Right Rear tire is required' }),
-  note: z.string().optional()
+  note: z.string().optional(),
+  archived: z.coerce.boolean().optional()
 });
