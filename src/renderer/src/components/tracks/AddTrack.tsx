@@ -1,5 +1,5 @@
 import { Button, Group, LoadingOverlay, NumberInput, Stack, TextInput, Title } from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
+import { useForm, schemaResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useMutation } from '@renderer/hooks/useMutation';
 import { useActiveTracks } from '@renderer/hooks/useTracks';
@@ -22,7 +22,7 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
   const form = useForm<TrackForm>({
     mode: 'uncontrolled',
     validateInputOnChange: true,
-    validate: zodResolver(trackSchema)
+    validate: schemaResolver(trackSchema, { sync: true })
   });
 
   if (!form.initialized) {
@@ -44,8 +44,8 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
     queryKey: ['tracks'],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const track = form.getValues();
-      await window.api.putTrack({ ...track, name: track.name ?? '', length: track.length ?? 0 });
+      const track = trackSchema.parse(form.getValues());
+      await window.api.putTrack({ ...track, trackId, archived: track.archived ?? false });
     },
     onError: () => form.setSubmitting(false)
   });

@@ -1,5 +1,5 @@
 import { Button, Checkbox, Group, LoadingOverlay, Stack, TextInput, Title } from '@mantine/core';
-import { useForm, zodResolver } from '@mantine/form';
+import { useForm, schemaResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useMutation } from '@renderer/hooks/useMutation';
 import { useActiveTires } from '@renderer/hooks/useTires';
@@ -18,7 +18,7 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
   const form = useForm<Partial<Tire>>({
     mode: 'uncontrolled',
     validateInputOnChange: true,
-    validate: zodResolver(tireSchema)
+    validate: schemaResolver(tireSchema, { sync: true })
   });
 
   if (!form.initialized) {
@@ -50,17 +50,8 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
     queryKey: ['tires', carId],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const tire = form.getValues();
-      await window.api.putTire({
-        ...tire,
-        carId,
-        name: tire.name ?? '',
-        allowedLf: tire.allowedLf ?? false,
-        allowedRf: tire.allowedRf ?? false,
-        allowedLr: tire.allowedLr ?? false,
-        allowedRr: tire.allowedRr ?? false,
-        archived: tire.archived ?? false
-      });
+      const tire = tireSchema.parse(form.getValues());
+      await window.api.putTire({ ...tire, carId, tireId, archived: tire.archived ?? false });
     },
     onError: () => form.setSubmitting(false)
   });

@@ -13,7 +13,7 @@ import {
   Title
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
-import { useForm, zodResolver } from '@mantine/form';
+import { useForm, schemaResolver } from '@mantine/form';
 import { FC, useMemo } from 'react';
 import { useActiveTires } from '@renderer/hooks/useTires';
 import { useActiveTracks } from '@renderer/hooks/useTracks';
@@ -23,6 +23,7 @@ import { formatDistance } from '@renderer/utils/distanceUtils';
 import { Stint } from '@shared/model';
 import { useMutation } from '@renderer/hooks/useMutation';
 import { stintSchema } from '../../../../shared/schema/stintSchema';
+import dayjs from 'dayjs';
 
 export interface StintProps {
   carId: string;
@@ -37,7 +38,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
   const form = useForm<Partial<Stint>>({
     mode: 'uncontrolled',
     validateInputOnChange: true,
-    validate: zodResolver(stintSchema)
+    validate: schemaResolver(stintSchema, { sync: true })
   });
 
   if (!form.initialized) {
@@ -125,22 +126,8 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     queryKey: ['stints', carId],
     mutationFn: async () => {
       form.setSubmitting(true);
-      const { date, trackId, laps, leftFront, rightFront, leftRear, rightRear, note, archived } =
-        form.getValues();
-      if (!trackId) throw new Error('Track is required');
-      if (!laps) throw new Error('Laps is required');
-      await window.api.putStint({
-        carId,
-        date: new Date(date!),
-        trackId,
-        laps,
-        leftFront: leftFront ?? '',
-        rightFront: rightFront ?? '',
-        leftRear: leftRear ?? '',
-        rightRear: rightRear ?? '',
-        note: note ?? '',
-        archived: archived ?? false
-      });
+      const stint = stintSchema.parse(form.getValues());
+      await window.api.putStint({ ...stint, stintId, archived: stint.archived ?? false });
     },
     onError: () => form.setSubmitting(false)
   });
@@ -153,7 +140,19 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
         <Loader />
       ) : (
         <Stack className="mt-5">
-          <DateTimePicker label="Stint time" {...form.getInputProps('date')} />
+          <DateTimePicker
+            key={form.key('date')}
+            label="Stint time"
+            {...form.getInputProps('date')}
+            defaultValue={
+              form.getValues().date
+                ? dayjs(form.getValues().date).format('YYYY-MM-DD HH:mm:ss')
+                : null
+            }
+            onChange={(value) =>
+              form.getInputProps('date').onChange(value ? dayjs(value).toDate() : undefined)
+            }
+          />
           <Select
             label="Track"
             placeholder="Select track"

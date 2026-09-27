@@ -57,7 +57,7 @@ const putTrack = (_, track: PartialValue<Track, 'trackId'>) => {
 
   if (track.trackId) {
     console.log('Updating track', track.trackId);
-    updateTrack.run(track.name, track.length, track.trackId);
+    updateTrack.run(track.name, track.length, track.archived ? 1 : 0, track.trackId);
   } else {
     console.log('Inserting track', track.name);
     insertTrack.run(randomUUID(), track.name, track.length);
@@ -102,6 +102,7 @@ const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
       stint.leftRear,
       stint.rightRear,
       stint.note,
+      stint.archived ? 1 : 0,
       stint.stintId
     );
   } else {
@@ -124,7 +125,8 @@ const putStint = (_, stint: PartialValue<Stint, 'stintId'>) => {
 const getStints = (_, carId: string, archived: boolean) => {
   return queryStints.all(carId, archived ? 1 : 0).map((stint) => ({
     ...stint,
-    date: new Date(stint.date)
+    date: new Date(stint.date),
+    note: stint.note ?? ''
   }));
 };
 
@@ -187,7 +189,7 @@ const putCar = (_, car: PartialValue<Car, 'carId'>) => {
 
   if (car.carId) {
     console.log('Updating car', car.carId);
-    updateCar.run(car.name, car.carId);
+    updateCar.run(car.name, car.archived ? 1 : 0, car.carId);
   } else {
     console.log('Inserting car', car.name);
     insertCar.run(randomUUID(), car.name);
