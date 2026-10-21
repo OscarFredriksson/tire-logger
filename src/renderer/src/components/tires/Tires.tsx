@@ -18,7 +18,7 @@ import {
   IconTrash
 } from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
-import { generatePath, useNavigate, useParams } from 'react-router';
+import { generatePath, useNavigate, useParams, useSearchParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { modals } from '@mantine/modals';
 import { AddTire, AddTireProps } from './AddTire';
@@ -26,7 +26,7 @@ import { useArchivedTires, useActiveTires } from '@renderer/hooks/useTires';
 import { TitleWithButton } from '../common/TitleWithButton';
 import { useActiveStints } from '@renderer/hooks/useStints';
 import { Stint, Tire } from '@shared/model';
-import { useActiveTracks } from '@renderer/hooks/useTracks';
+import { useTracks } from '@renderer/hooks/useTracks';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TireFilters } from './TireFilters';
 import { formatDate } from '@renderer/utils/dateUtils';
@@ -103,7 +103,7 @@ const sortData = (
         ? (b.lastUsedStint?.date.getTime() || 0) - (a.lastUsedStint?.date.getTime() || 0)
         : b[sortBy] - a[sortBy];
 
-  return data.sort((a, b) => (reversed ? sortFn(b, a) : sortFn(a, b)));
+  return [...data].sort((a, b) => (reversed ? sortFn(b, a) : sortFn(a, b)));
 };
 export interface ActiveTiresProps {
   activeTires: EnrichedTire[] | undefined;
@@ -451,11 +451,12 @@ export const Tires: FC = () => {
   const { carId } = useParams();
   const navigate = useNavigate();
 
-  const [showArchived, setShowArchived] = useState<boolean>(false);
+  const [searchParams] = useSearchParams();
+  const [showArchived, setShowArchived] = useState(searchParams.get('archived') === 'true');
   const { loadingActiveTires, activeTires } = useActiveTires({ carId });
   const { loadingArchivedTires, archivedTires } = useArchivedTires({ carId });
   const { loadingActiveStints, getTireStints } = useActiveStints({ carId });
-  const { getTrack } = useActiveTracks();
+  const { getTrack } = useTracks();
 
   const openTireModal = (props?: AddTireProps) => {
     modals.open({
@@ -468,8 +469,6 @@ export const Tires: FC = () => {
   const [archivedFilters, setArchivedFilters] = useState<TireFilters>();
   const [sortBy, setSortBy] = useState<'name' | 'distance' | 'date' | undefined>(undefined);
   const [reverseSortDirection, setReverseSortDirection] = useState(false);
-  const [sortedTires, setSortedTires] = useState<typeof filteredTires>();
-  const [sortedArchivedTires, setSortedArchivedTires] = useState<typeof filteredArchivedTires>();
 
   const enrichedTires = useMemo<EnrichedTire[] | undefined>(
     () =>
@@ -551,15 +550,14 @@ export const Tires: FC = () => {
         );
   }, [enrichedArchivedTires, archivedFilters]);
 
+  const sortedTires = filteredTires && sortData(filteredTires, sortBy, reverseSortDirection);
+  const sortedArchivedTires =
+    filteredArchivedTires && sortData(filteredArchivedTires, sortBy, reverseSortDirection);
+
   const setSorting = (field: 'name' | 'distance' | 'date' | undefined) => {
     const reversed = field === sortBy ? !reverseSortDirection : false;
     setReverseSortDirection(reversed);
     setSortBy(field);
-    if (!showArchived) {
-      setSortedTires(sortData(filteredTires || [], field, reversed));
-    } else {
-      setSortedArchivedTires(sortData(filteredArchivedTires || [], field, reversed));
-    }
   };
 
   return (

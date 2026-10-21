@@ -25,8 +25,7 @@ export function useDataTransferActions() {
     if (result?.canceled) return;
 
     try {
-      const importedData = JSON.parse(result.fileContent) as ImportData;
-      importSchema.parse(importedData);
+      const importedData = importSchema.parse(JSON.parse(result.fileContent));
 
       const summary = importedData.data ? JSON.stringify(importedData.data, null, 2) : '';
       setPreview({ importedData, summary });

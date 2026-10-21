@@ -24,8 +24,8 @@ import { AddStint, StintProps } from './AddStint';
 import { themeConstants } from '@renderer/theme';
 import { useActiveStints, useArchivedStints } from '@renderer/hooks/useStints';
 import { TitleWithButton } from '../common/TitleWithButton';
-import { useActiveTracks } from '@renderer/hooks/useTracks';
-import { useActiveTires } from '@renderer/hooks/useTires';
+import { useTracks } from '@renderer/hooks/useTracks';
+import { useTires } from '@renderer/hooks/useTires';
 import { generatePath, useNavigate, useParams, useSearchParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { formatDistance } from '@renderer/utils/distanceUtils';
@@ -85,9 +85,9 @@ interface TireTableRowProps {
 
 const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
   const { carId } = useParams();
-  const { getActiveTire, loadingActiveTires } = useActiveTires({ carId });
+  const { getTire, loading: loadingTires } = useTires({ carId });
   const { loadingActiveStints, getTireStints } = useActiveStints({ carId });
-  const { loadingActiveTracks, getTrack } = useActiveTracks();
+  const { loading: loadingTracks, getTrack } = useTracks();
   const navigate = useNavigate();
 
   const tireStints = useMemo(
@@ -99,14 +99,10 @@ const TireTableRow: FC<TireTableRowProps> = ({ title, tireId }) => {
     <Table.Tr>
       <Table.Td>{title}</Table.Td>
       <Table.Td>
-        {!loadingActiveTires && tireId ? (
-          getActiveTire(tireId)?.name
-        ) : (
-          <Skeleton height={8} width="50%" />
-        )}
+        {!loadingTires && tireId ? getTire(tireId)?.name : <Skeleton height={8} width="50%" />}
       </Table.Td>
       <Table.Td>
-        {loadingActiveStints || loadingActiveTracks ? (
+        {loadingActiveStints || loadingTracks ? (
           <Skeleton height={8} width="40%" />
         ) : tireStints ? (
           tireStints.reduce((total, { laps }) => total + laps, 0) +
@@ -143,10 +139,10 @@ export const Stints: FC = () => {
 
   useEffect(() => scrollToRef.current?.scrollIntoView({ behavior: 'smooth' }), [scrollToRef]);
 
-  const [showArchived, setShowArchived] = useState<boolean>(false);
+  const [showArchived, setShowArchived] = useState(searchParams.get('archived') === 'true');
   const { loadingActiveStints, activeStints } = useActiveStints({ carId, archived: showArchived });
   const { loadingArchivedStints, archivedStints } = useArchivedStints({ carId });
-  const { getTrack } = useActiveTracks();
+  const { getTrack } = useTracks();
 
   const openStintModal = (props?: StintProps) => {
     if (!carId) throw new Error('CarId is undefined.');

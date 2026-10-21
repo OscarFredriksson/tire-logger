@@ -1,11 +1,21 @@
 import { z } from 'zod';
 
+const importedArchivedSchema = z
+  .union([z.boolean(), z.literal(0), z.literal(1)])
+  .transform((archived) => (archived ? 1 : 0));
+
+export const importRowSchema = z
+  .object({
+    archived: importedArchivedSchema.optional()
+  })
+  .passthrough();
+
 // Define minimal required fields for import
 const importStintSchema = z
   .object({
     id: z.string(),
     date: z.string(), // Make date optional for import
-    archived: z.coerce.boolean().optional()
+    archived: importedArchivedSchema.optional()
     // Add other minimal required fields
   })
   .passthrough(); // Allow additional fields
@@ -13,7 +23,7 @@ const importStintSchema = z
 const importTireSchema = z
   .object({
     id: z.string(),
-    archived: z.coerce.boolean().optional()
+    archived: importedArchivedSchema.optional()
     // Other minimal fields
   })
   .passthrough();
@@ -22,7 +32,7 @@ const importCarSchema = z
   .object({
     id: z.string(),
     name: z.string(),
-    archived: z.coerce.boolean().optional()
+    archived: importedArchivedSchema.optional()
     // Other minimal fields
   })
   .passthrough();
@@ -31,7 +41,7 @@ const importTrackSchema = z
   .object({
     id: z.string(),
     name: z.string(),
-    archived: z.coerce.boolean().optional()
+    archived: importedArchivedSchema.optional()
     // Other minimal fields
   })
   .passthrough();

@@ -8,6 +8,7 @@ import { routes } from '@renderer/routes';
 import { generatePath, useNavigate } from 'react-router';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { useErrorBoundary } from 'react-error-boundary';
+import { queryClient } from '@renderer/main';
 
 interface UseActiveTiresProps {
   carId?: string;
@@ -34,7 +35,10 @@ export const useActiveTires = ({ carId }: UseActiveTiresProps): UseActiveTires =
     entityName: 'tire',
     queryKey: ['tires', carId],
     mutationFn: window.api.archiveTire,
-    onSuccess: () => navigate(generatePath(routes.TIRES, { carId }))
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stints', carId] });
+      navigate(generatePath(routes.TIRES, { carId }));
+    }
   });
 
   const tireMap = useMemo<Record<string, Tire | undefined>>(
@@ -143,6 +147,20 @@ export const useArchivedTires = ({ carId }: UseArchivedTires) => {
     loadingArchivedTires: isLoading,
     archivedTires,
     getArchivedTire,
+    restoreTire
+  };
+};
+
+export const useTires = ({ carId }: UseActiveTiresProps) => {
+  const { activeTires, loadingActiveTires, archiveTire } = useActiveTires({ carId });
+  const { archivedTires, loadingArchivedTires, restoreTire } = useArchivedTires({ carId });
+  const tires = activeTires && archivedTires ? [...activeTires, ...archivedTires] : undefined;
+
+  return {
+    tires,
+    loading: loadingActiveTires || loadingArchivedTires,
+    getTire: (tireId: string) => tires?.find((tire) => tire.tireId === tireId),
+    archiveTire,
     restoreTire
   };
 };

@@ -146,3 +146,13 @@ export const useArchivedStints = ({ carId }: UseArchivedStintsProps) => {
     restoreStint
   };
 };
+
+export const useStints = ({ carId }: UseArchivedStintsProps) => {
+  const { loadingActiveStints, getStint } = useActiveStints({ carId, archived: false });
+  const { loadingArchivedStints, getArchivedStint } = useArchivedStints({ carId });
+
+  return {
+    loading: loadingActiveStints || loadingArchivedStints,
+    getStint: (stintId: string) => getStint(stintId) ?? getArchivedStint(stintId)
+  };
+};

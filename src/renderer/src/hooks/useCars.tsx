@@ -155,3 +155,13 @@ export const useArchivedCars = (): UseArchivedCars => {
 
   return { loadingArchivedCars, archivedCars, getArchivedCar, restoreCar };
 };
+
+export const useCars = () => {
+  const { loadingActiveCars, getCar } = useActiveCar();
+  const { loadingArchivedCars, getArchivedCar } = useArchivedCars();
+
+  return {
+    loading: loadingActiveCars || loadingArchivedCars,
+    getCar: (carId: string) => getCar(carId) ?? getArchivedCar(carId)
+  };
+};

@@ -2,7 +2,7 @@ import { Button, Checkbox, Group, LoadingOverlay, Stack, TextInput, Title } from
 import { useForm, schemaResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useMutation } from '@renderer/hooks/useMutation';
-import { useActiveTires } from '@renderer/hooks/useTires';
+import { useTires } from '@renderer/hooks/useTires';
 import { Tire } from '@shared/model';
 import { tireSchema } from '../../../../shared/schema/tireSchema';
 import { FC } from 'react';
@@ -13,7 +13,7 @@ export interface AddTireProps {
 }
 
 export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
-  const { getActiveTire, loadingActiveTires } = useActiveTires({ carId });
+  const { getTire: getActiveTire, loading: loadingActiveTires } = useTires({ carId });
 
   const form = useForm<Partial<Tire>>({
     mode: 'uncontrolled',

@@ -15,9 +15,9 @@ import {
 import { DateTimePicker } from '@mantine/dates';
 import { useForm, schemaResolver } from '@mantine/form';
 import { FC, useMemo } from 'react';
-import { useActiveTires } from '@renderer/hooks/useTires';
-import { useActiveTracks } from '@renderer/hooks/useTracks';
-import { useActiveStints } from '@renderer/hooks/useStints';
+import { useTires } from '@renderer/hooks/useTires';
+import { useTracks } from '@renderer/hooks/useTracks';
+import { useStints } from '@renderer/hooks/useStints';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { Stint } from '@shared/model';
@@ -31,9 +31,9 @@ export interface StintProps {
 }
 
 export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
-  const { activeTracks } = useActiveTracks();
-  const { activeTires } = useActiveTires({ carId });
-  const { getStint, loadingActiveStints } = useActiveStints({ carId });
+  const { tracks } = useTracks();
+  const { tires } = useTires({ carId });
+  const { getStint, loading: loadingActiveStints } = useStints({ carId });
 
   const form = useForm<Partial<Stint>>({
     mode: 'uncontrolled',
@@ -56,7 +56,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
 
   const getDistanceProps = () => {
     const { trackId, laps } = form.getValues();
-    const track = activeTracks?.find((track) => track.trackId === trackId);
+    const track = tracks?.find((track) => track.trackId === trackId);
 
     if (!track) return { placeholder: 'Select track...' };
     if (!laps) return { placeholder: 'Enter number of laps...' };
@@ -64,7 +64,11 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     return { value: formatDistance(track.length * laps) };
   };
 
-  const { leftFront, rightFront, leftRear, rightRear } = form.getValues();
+  const { leftFront, rightFront, leftRear, rightRear, trackId } = form.getValues();
+  const activeTracks = tracks?.filter((track) => !track.archived || track.trackId === trackId);
+  const activeTires = tires?.filter(
+    (tire) => !tire.archived || [leftFront, rightFront, leftRear, rightRear].includes(tire.tireId)
+  );
 
   const tireSelections = useMemo(
     () =>

@@ -5,7 +5,7 @@ import {
   archiveStintId,
   archiveStintsByCar,
   archiveStintsByTrackId,
-  archiveTireId,
+  archiveTireWithStints,
   archiveTiresByCar,
   archiveTrackId,
   deleteCarId,
@@ -224,7 +224,7 @@ const deleteTire = (_, tireId: string) => {
 
 const archiveTire = (_, tireId: string) => {
   console.log('Archiving tire', tireId);
-  archiveTireId.run(tireId);
+  archiveTireWithStints(tireId);
 };
 
 const restoreTire = (_, tireId: string) => {

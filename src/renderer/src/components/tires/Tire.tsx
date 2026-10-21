@@ -14,13 +14,13 @@ import {
   Title,
   Tooltip
 } from '@mantine/core';
-import { IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconArrowBackUp, IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
-import { useActiveTires } from '@renderer/hooks/useTires';
+import { useTires } from '@renderer/hooks/useTires';
 import { useActiveStints } from '@renderer/hooks/useStints';
-import { useActiveTracks } from '@renderer/hooks/useTracks';
+import { useTracks } from '@renderer/hooks/useTracks';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TextWithLabel } from '../common/TextWithLabel';
 import { formatDate } from '@renderer/utils/dateUtils';
@@ -48,11 +48,13 @@ export const Tire: FC = () => {
   const { carId, tireId } = useParams();
   const navigate = useNavigate();
 
-  const { loadingActiveTires, getActiveTire, archiveTire } = useActiveTires({ carId });
-  const { loadingActiveStints, getTireStints } = useActiveStints({ carId });
-  const { loadingActiveTracks, getTrack } = useActiveTracks();
-
-  const tire = useMemo(() => tireId && getActiveTire(tireId), [getActiveTire, tireId]);
+  const { loading: loadingTires, getTire, archiveTire, restoreTire } = useTires({ carId });
+  const tire = tireId ? getTire(tireId) : undefined;
+  const { loadingActiveStints, getTireStints } = useActiveStints({
+    carId,
+    archived: Boolean(tire?.archived)
+  });
+  const { loading: loadingActiveTracks, getTrack } = useTracks();
 
   const tireStints = useMemo(
     () => tireId && !loadingActiveStints && getTireStints(tireId),
@@ -98,11 +100,15 @@ export const Tire: FC = () => {
       <Group gap="xl">
         <Button
           leftSection={<IconArrowLeft />}
-          onClick={() => navigate(generatePath(routes.TIRES, { carId }))}
+          onClick={() =>
+            navigate(
+              generatePath(routes.TIRES, { carId }) + (tire?.archived ? '?archived=true' : '')
+            )
+          }
         >
           Back
         </Button>
-        <Title>{loadingActiveTires ? 'Loading Tire' : !tire ? 'Tire not found' : tire.name}</Title>
+        <Title>{loadingTires ? 'Loading Tire' : !tire ? 'Tire not found' : tire.name}</Title>
         {tire && (
           <Group gap="xs">
             <Tooltip label="Edit tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
@@ -114,20 +120,26 @@ export const Tire: FC = () => {
                 <IconEdit size={22} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Archive tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
+            <Tooltip
+              label={tire.archived ? 'Restore tire' : 'Archive tire'}
+              withArrow
+              openDelay={themeConstants.TOOLTIP_OPEN_DELAY}
+            >
               <ActionIcon
                 variant="filled"
-                color="red"
+                color={tire.archived ? undefined : 'red'}
                 size="lg"
-                onClick={() => archiveTire(tire.tireId)}
+                onClick={() =>
+                  tire.archived ? restoreTire(tire.tireId) : archiveTire(tire.tireId)
+                }
               >
-                <IconTrash size={22} />
+                {tire.archived ? <IconArrowBackUp size={22} /> : <IconTrash size={22} />}
               </ActionIcon>
             </Tooltip>
           </Group>
         )}
       </Group>
-      {loadingActiveTires ? (
+      {loadingTires ? (
         <Center className="mt-5">
           <Loader />
         </Center>
@@ -259,12 +271,16 @@ export const Tire: FC = () => {
                 </Table.Thead>
                 <Table.Tbody>
                   {(sortedStints || enrichedStints).map(
-                    ({ stintId, trackName, distance, date, laps, position, note }) => (
+                    ({ stintId, trackName, distance, date, laps, position, note, archived }) => (
                       <Table.Tr
                         key={stintId}
                         className="cursor-pointer"
                         onClick={() =>
-                          navigate(generatePath(routes.STINTS, { carId }) + '?stintId=' + stintId)
+                          navigate(
+                            generatePath(routes.STINTS, { carId }) +
+                              '?' +
+                              new URLSearchParams({ stintId, archived: String(Boolean(archived)) })
+                          )
                         }
                       >
                         <Table.Td>{formatDate(date)}</Table.Td>

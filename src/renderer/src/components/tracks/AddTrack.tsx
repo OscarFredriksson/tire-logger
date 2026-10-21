@@ -2,7 +2,7 @@ import { Button, Group, LoadingOverlay, NumberInput, Stack, TextInput, Title } f
 import { useForm, schemaResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useMutation } from '@renderer/hooks/useMutation';
-import { useActiveTracks } from '@renderer/hooks/useTracks';
+import { useTracks } from '@renderer/hooks/useTracks';
 import { trackSchema } from '../../../../shared/schema/trackSchema';
 import { FC } from 'react';
 
@@ -17,7 +17,7 @@ interface TrackForm {
 }
 
 export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
-  const { getTrack, loadingActiveTracks } = useActiveTracks();
+  const { getTrack, loading: loadingActiveTracks } = useTracks();
 
   const form = useForm<TrackForm>({
     mode: 'uncontrolled',

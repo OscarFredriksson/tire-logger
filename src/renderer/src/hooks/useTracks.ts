@@ -32,3 +32,15 @@ export const useArchivedTracks = () => {
     getTrack
   };
 };
+
+export const useTracks = () => {
+  const { activeTracks, loadingActiveTracks } = useActiveTracks();
+  const { archivedTracks, loadingArchivedTracks } = useArchivedTracks();
+  const tracks = activeTracks && archivedTracks ? [...activeTracks, ...archivedTracks] : undefined;
+
+  return {
+    tracks,
+    loading: loadingActiveTracks || loadingArchivedTracks,
+    getTrack: (trackId: string) => tracks?.find((track) => track.trackId === trackId)
+  };
+};

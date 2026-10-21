@@ -1,7 +1,7 @@
 import { Button, Group, Stack, TextInput, Title } from '@mantine/core';
 import { useForm, schemaResolver } from '@mantine/form';
 import { modals } from '@mantine/modals';
-import { useActiveCar } from '@renderer/hooks/useCars';
+import { useCars } from '@renderer/hooks/useCars';
 import { useMutation } from '@renderer/hooks/useMutation';
 import { carSchema } from '../../../../shared/schema/carSchema';
 import { FC } from 'react';
@@ -15,7 +15,7 @@ interface CarForm {
 }
 
 export const AddCar: FC<AddCarProps> = ({ carId }) => {
-  const { loadingActiveCars, getCar } = useActiveCar();
+  const { loading: loadingActiveCars, getCar } = useCars();
 
   const form = useForm<CarForm>({
     mode: 'uncontrolled',

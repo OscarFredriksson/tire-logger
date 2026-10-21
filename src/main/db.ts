@@ -1,6 +1,7 @@
 import Database, { Statement } from 'better-sqlite3';
 import type { Database as BetterSqlite3Database } from 'better-sqlite3';
 import { Car, Stint, Tire, Track } from '../shared/model';
+import { importRowSchema } from '../shared/schema/importSchema';
 import { app } from 'electron';
 import path from 'path';
 
@@ -122,6 +123,15 @@ export const archiveStintsByTrackId: Statement = db.prepare(
   'UPDATE stints SET archived = 1 WHERE trackId = ?;'
 );
 
+const archiveStintsByTireId = db.prepare(
+  'UPDATE stints SET archived = 1 WHERE leftFront = ? OR rightFront = ? OR leftRear = ? OR rightRear = ?;'
+);
+
+export const archiveTireWithStints: (tireId: string) => void = db.transaction((tireId: string) => {
+  archiveTireId.run(tireId);
+  archiveStintsByTireId.run(tireId, tireId, tireId, tireId);
+});
+
 // Restore resources
 export const restoreTireId: Statement = db.prepare(
   'UPDATE tires SET archived = 0 WHERE tireId = ?;'
@@ -155,43 +165,7 @@ export const getQueryAllTables = (tableNames: string[]) => {
 };
 
 export function importData(data: any) {
-  // Start transaction for atomic import
-  const transaction = db.transaction(() => {
-    // Handle different data formats
-    if (data.data) {
-      // If exported with metadata (version, exportDate, etc.)
-      importTables(data.data);
-    } else {
-      // Direct table data
-      importTables(data);
-    }
-  });
-
-  transaction();
-}
-
-function importTables(tableData: Record<string, any[]>) {
-  for (const [tableName, rows] of Object.entries(tableData)) {
-    if (!Array.isArray(rows) || rows.length === 0) continue;
-
-    // Get column names from first row
-    const columns = Object.keys(rows[0]);
-    const placeholders = columns.map(() => '?').join(', ');
-
-    // Prepare insert statement
-    const insertStmt = db.prepare(`
-      INSERT OR REPLACE INTO ${tableName} (${columns.join(', ')}) 
-      VALUES (${placeholders})
-    `);
-
-    // Insert all rows
-    for (const row of rows) {
-      const values = columns.map((col) => row[col]);
-      insertStmt.run(...values);
-    }
-
-    console.log(`Imported ${rows.length} rows into ${tableName}`);
-  }
+  importDataWithOptions(data, { conflictResolution: 'replace' });
 }
 
 export function importDataWithOptions(
@@ -204,20 +178,19 @@ export function importDataWithOptions(
   const transaction = db.transaction(() => {
     const tableData = data.data || data;
 
-    for (const [tableName, rows] of Object.entries(tableData)) {
-      if (!Array.isArray(rows) || rows.length === 0) continue;
+    for (const [tableName, tableRows] of Object.entries(tableData)) {
+      if (!Array.isArray(tableRows) || tableRows.length === 0) continue;
+      const rows = tableRows.map((row) => importRowSchema.parse(row));
 
       // Clear existing data if requested
       if (options.clearExisting) {
         db.prepare(`DELETE FROM ${tableName}`).run();
       }
 
-      const columns = Object.keys(rows[0]);
-
       if (options.conflictResolution === 'merge') {
-        handleMergeImport(db, tableName, rows, columns);
+        handleMergeImport(db, tableName, rows);
       } else {
-        handleStandardImport(db, tableName, rows, columns, options.conflictResolution);
+        handleStandardImport(db, tableName, rows, options.conflictResolution);
       }
     }
   });
@@ -225,15 +198,7 @@ export function importDataWithOptions(
   transaction();
 }
 
-function handleStandardImport(
-  db: any,
-  tableName: string,
-  rows: any[],
-  columns: string[],
-  conflictResolution: string
-) {
-  const placeholders = columns.map(() => '?').join(', ');
-
+function handleStandardImport(db: any, tableName: string, rows: any[], conflictResolution: string) {
   let insertQuery = '';
   switch (conflictResolution) {
     case 'replace':
@@ -248,18 +213,19 @@ function handleStandardImport(
       break;
   }
 
-  const insertStmt = db.prepare(`
-    ${insertQuery} (${columns.join(', ')}) 
-    VALUES (${placeholders})
-  `);
-
   for (const row of rows) {
+    const columns = Object.keys(row);
+    const placeholders = columns.map(() => '?').join(', ');
+    const insertStmt = db.prepare(`
+      ${insertQuery} (${columns.join(', ')})
+      VALUES (${placeholders})
+    `);
     const values = columns.map((col) => row[col]);
     insertStmt.run(...values);
   }
 }
 
-function handleMergeImport(db: any, tableName: string, rows: any[], columns: string[]) {
+function handleMergeImport(db: any, tableName: string, rows: any[]) {
   // Get primary key column(s) for the table
   const primaryKeys = getPrimaryKeys(db, tableName);
 
@@ -273,7 +239,7 @@ function handleMergeImport(db: any, tableName: string, rows: any[], columns: str
       updateRecord(db, tableName, mergedData, primaryKeys);
     } else {
       // Insert new record
-      insertRecord(db, tableName, row, columns);
+      insertRecord(db, tableName, row, Object.keys(row));
     }
   }
 
