@@ -9,6 +9,7 @@ import { useErrorBoundary } from 'react-error-boundary';
 
 interface UseActiveCars {
   loadingActiveCars: boolean;
+  activeCarsError: Error | null;
   activeCars?: Car[];
   getCar: (carId: string) => Car | undefined;
   archiveCar: (carId: string) => void;
@@ -20,9 +21,14 @@ interface UseActiveCarsProps {
 export const useActiveCar = ({ onCarsChange }: UseActiveCarsProps = {}): UseActiveCars => {
   const { showBoundary } = useErrorBoundary();
 
-  const { data: cars, isLoading } = useQuery({
+  const {
+    data: cars,
+    isLoading,
+    error
+  } = useQuery({
     queryKey: ['cars', false],
-    queryFn: () => window.api.getCars(false)
+    queryFn: () => window.api.getCars(false),
+    select: (records) => records.filter((car) => !car.archived)
   });
 
   const carMap = useMemo<Record<string, Car>>(
@@ -84,6 +90,7 @@ export const useActiveCar = ({ onCarsChange }: UseActiveCarsProps = {}): UseActi
 
   return {
     loadingActiveCars: isLoading,
+    activeCarsError: error,
     activeCars: cars,
     getCar,
     archiveCar
@@ -92,6 +99,7 @@ export const useActiveCar = ({ onCarsChange }: UseActiveCarsProps = {}): UseActi
 
 interface UseArchivedCars {
   loadingArchivedCars: boolean;
+  archivedCarsError: Error | null;
   archivedCars?: Car[];
   getArchivedCar: (carId: string) => Car | undefined;
   restoreCar: (carId: string) => void;
@@ -100,7 +108,11 @@ interface UseArchivedCars {
 export const useArchivedCars = (): UseArchivedCars => {
   const { showBoundary } = useErrorBoundary();
 
-  const { data: archivedCars, isLoading: loadingArchivedCars } = useQuery({
+  const {
+    data: archivedCars,
+    isLoading: loadingArchivedCars,
+    error: archivedCarsError
+  } = useQuery({
     queryKey: ['cars', true],
     queryFn: () => window.api.getCars(true)
   });
@@ -153,7 +165,7 @@ export const useArchivedCars = (): UseArchivedCars => {
     });
   };
 
-  return { loadingArchivedCars, archivedCars, getArchivedCar, restoreCar };
+  return { loadingArchivedCars, archivedCarsError, archivedCars, getArchivedCar, restoreCar };
 };
 
 export const useCars = () => {

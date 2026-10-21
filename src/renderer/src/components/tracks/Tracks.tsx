@@ -23,7 +23,7 @@ import {
 import { AddTrack, AddTrackProps } from './AddTrack';
 import { modals } from '@mantine/modals';
 import { formatDistance } from '@renderer/utils/distanceUtils';
-import { queryClient } from '@renderer/main';
+import { useQueryClient } from '@tanstack/react-query';
 import SegmentToggle from '../common/SegmentToggle';
 
 interface TrackMenuProps {
@@ -34,6 +34,7 @@ interface TrackMenuProps {
 }
 
 const TrackMenu: FC<TrackMenuProps> = ({ trackId, trackName, openTrackModal, archived }) => {
+  const queryClient = useQueryClient();
   const [opened, setOpened] = useState<boolean>(false);
 
   const onDelete = () => {

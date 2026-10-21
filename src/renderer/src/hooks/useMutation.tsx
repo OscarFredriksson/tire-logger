@@ -1,13 +1,13 @@
 import {
   UseMutationOptions,
   UseMutationResult,
+  useQueryClient,
   useMutation as useTanStackMutation
 } from '@tanstack/react-query';
 import { DefaultError } from '@tanstack/query-core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconX } from '@tabler/icons-react';
-import { queryClient } from '@renderer/main';
 
 interface UseMutationProps<TData, TError, TVariables, TContext>
   extends UseMutationOptions<TData, TError, TVariables, TContext> {
@@ -38,6 +38,7 @@ export const useMutation = <
   TVariables,
   TContext
 > => {
+  const queryClient = useQueryClient();
   return useTanStackMutation({
     ...props,
     onSuccess: (data, variables, context) => {

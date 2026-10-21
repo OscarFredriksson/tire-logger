@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MantineProvider } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { useMutation } from '../hooks/useMutation';
 import { Car, Stint, Tire as TireModel, Track } from '@shared/model';
 import { AddCar } from './cars/AddCar';
@@ -16,7 +16,10 @@ import { ActiveTiresProps, Tires } from './tires/Tires';
 import { Stints } from './stints/Stints';
 import { Header } from './Header';
 
-jest.mock('@tanstack/react-query', () => ({ useQuery: jest.fn() }));
+jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual<typeof import('@tanstack/react-query')>('@tanstack/react-query'),
+  useQuery: jest.fn()
+}));
 jest.mock('../hooks/useMutation', () => ({ useMutation: jest.fn() }));
 jest.mock('@renderer/main', () => ({ queryClient: { invalidateQueries: jest.fn() } }));
 jest.mock('react-error-boundary', () => ({
@@ -31,19 +34,21 @@ const records: { cars: Car[]; tracks: Track[]; tires: TireModel[]; stints: Stint
   stints: []
 };
 
-function render(view: ReactNode, route = '/cars') {
+function render(view: ReactNode, route = '/') {
   return renderToStaticMarkup(
-    <MantineProvider>
-      <MemoryRouter initialEntries={[route]}>
-        <ModalsProvider>
-          <Routes>
-            <Route path="/car/:carId/tires/:tireId" element={view} />
-            <Route path="/car/:carId/stints" element={view} />
-            <Route path="*" element={view} />
-          </Routes>
-        </ModalsProvider>
-      </MemoryRouter>
-    </MantineProvider>
+    <QueryClientProvider client={new QueryClient()}>
+      <MantineProvider>
+        <MemoryRouter initialEntries={[route]}>
+          <ModalsProvider>
+            <Routes>
+              <Route path="/car/:carId/tires/:tireId" element={view} />
+              <Route path="/car/:carId/stints" element={view} />
+              <Route path="*" element={view} />
+            </Routes>
+          </ModalsProvider>
+        </MemoryRouter>
+      </MantineProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -157,7 +162,7 @@ describe('Archived editors and history', () => {
 
 describe('Car navigation', () => {
   it('disables car tabs when the last car is archived', () => {
-    const html = render(<Header />, '/car/car/stints');
+    const html = render(<Header onChangeCar={jest.fn()} />, '/car/car/stints');
     const carTabs = html
       .match(/<button\b[^>]*>[\s\S]*?<\/button>/g)!
       .filter((button) => button.includes('Stints') || button.includes('Tires'));
@@ -165,14 +170,13 @@ describe('Car navigation', () => {
     for (const button of carTabs) expect(button).toContain('disabled=""');
   });
 
-  it('keeps car tabs enabled when another active car exists', () => {
-    records.cars.push({ carId: 'other', name: 'Active car', archived: false });
-    const html = render(<Header />, '/car/car/stints');
+  it('does not silently select another car when no car is selected', () => {
+    const html = render(<Header onChangeCar={jest.fn()} />, '/car/car/stints');
     const carTabs = html
       .match(/<button\b[^>]*>[\s\S]*?<\/button>/g)!
       .filter((button) => button.includes('Stints') || button.includes('Tires'));
     expect(carTabs).toHaveLength(2);
-    for (const button of carTabs) expect(button).not.toContain('disabled=""');
+    for (const button of carTabs) expect(button).toContain('disabled=""');
   });
 });
 

@@ -1,25 +1,18 @@
-import {
-  IconArrowBackUp,
-  IconDotsVertical,
-  IconEdit,
-  IconPlus,
-  IconTrash
-} from '@tabler/icons-react';
-import { TitleWithButton } from '../common/TitleWithButton';
+import { IconArrowBackUp, IconDotsVertical, IconEdit, IconTrash } from '@tabler/icons-react';
 import { useArchivedCars, useActiveCar } from '@renderer/hooks/useCars';
 import { ActionIcon, Card, Flex, Group, Loader, Menu, Title } from '@mantine/core';
 import { AddCar, AddCarProps } from './AddCar';
 import { modals } from '@mantine/modals';
 import { FC, useState } from 'react';
-import SegmentToggle from '../common/SegmentToggle';
 
 interface CarMenuProps {
   carId: string;
+  carName: string;
   openCarModal: (props?: AddCarProps) => void;
   archived: boolean;
 }
 
-const CarMenu: FC<CarMenuProps> = ({ carId, openCarModal, archived }) => {
+const CarMenu: FC<CarMenuProps> = ({ carId, carName, openCarModal, archived }) => {
   const { archiveCar } = useActiveCar();
   const { restoreCar } = useArchivedCars();
   const [opened, setOpened] = useState<boolean>(false);
@@ -27,7 +20,13 @@ const CarMenu: FC<CarMenuProps> = ({ carId, openCarModal, archived }) => {
   return (
     <Menu opened={opened} onChange={setOpened}>
       <Menu.Target>
-        <ActionIcon className="ml-auto" variant="subtle" color="gray">
+        <ActionIcon
+          className="ml-auto"
+          size="md"
+          variant="subtle"
+          color="gray"
+          aria-label={`Manage ${carName}`}
+        >
           <IconDotsVertical />
         </ActionIcon>
       </Menu.Target>
@@ -57,10 +56,9 @@ const carsTableTextMap = (archived: boolean) => ({
   empty: archived ? 'No archived cars found' : 'No cars added yet'
 });
 
-export const Cars = () => {
-  const [showArchived, setShowArchived] = useState<boolean>(false);
+export const CarManagement = ({ showArchived }: { showArchived: boolean }) => {
   const { loadingActiveCars, activeCars } = useActiveCar();
-  const { loadingArchivedCars, archivedCars } = useArchivedCars();
+  const { loadingArchivedCars, archivedCars, archivedCarsError } = useArchivedCars();
 
   const openCarModal = (props?: AddCarProps) => {
     modals.open({
@@ -69,54 +67,57 @@ export const Cars = () => {
     });
   };
 
+  if (showArchived && archivedCarsError) throw archivedCarsError;
+
   return (
-    <>
-      <TitleWithButton
-        buttonIcon={<IconPlus />}
-        buttonText="Add car"
-        onButtonClick={openCarModal}
-        centerElement={
-          <SegmentToggle
-            value={showArchived ? 'archived' : 'active'}
-            onChange={(v) => setShowArchived(v === 'archived')}
-          />
-        }
-      >
-        Cars
-      </TitleWithButton>
+    <Flex className="mt-2" direction="column" gap={10}>
       {showArchived ? (
         loadingArchivedCars ? (
           <Loader className="mt-8" />
         ) : !archivedCars || archivedCars.length === 0 ? (
           <div className="mt-4">{carsTableTextMap(true).empty}</div>
         ) : (
-          <Flex className="mt-2" direction="column" gap={10}>
+          <>
             {archivedCars.map(({ carId, name }) => (
-              <Card key={'car-' + carId} padding={12}>
-                <Group>
-                  <Title order={5}>{name}</Title>
-                  <CarMenu carId={carId} openCarModal={openCarModal} archived={true} />
+              <Card key={carId} padding={12}>
+                <Group wrap="nowrap">
+                  <Title order={5} className="car-card-name">
+                    {name}
+                  </Title>
+                  <CarMenu
+                    carId={carId}
+                    carName={name}
+                    openCarModal={openCarModal}
+                    archived={true}
+                  />
                 </Group>
               </Card>
             ))}
-          </Flex>
+          </>
         )
       ) : loadingActiveCars ? (
         <Loader className="mt-8" />
       ) : !activeCars || activeCars.length === 0 ? (
         <div className="mt-4">{carsTableTextMap(false).empty}</div>
       ) : (
-        <Flex className="mt-2" direction="column" gap={10}>
+        <>
           {activeCars.map(({ carId, name }) => (
-            <Card key={'car-' + carId} padding={12}>
-              <Group>
-                <Title order={5}>{name}</Title>
-                <CarMenu carId={carId} openCarModal={openCarModal} archived={false} />
+            <Card key={carId} padding={12}>
+              <Group wrap="nowrap">
+                <Title order={5} className="car-card-name">
+                  {name}
+                </Title>
+                <CarMenu
+                  carId={carId}
+                  carName={name}
+                  openCarModal={openCarModal}
+                  archived={false}
+                />
               </Group>
             </Card>
           ))}
-        </Flex>
+        </>
       )}
-    </>
+    </Flex>
   );
 };

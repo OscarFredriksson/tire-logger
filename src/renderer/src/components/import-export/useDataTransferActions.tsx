@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Notifications } from '@mantine/notifications';
 import Zod from 'zod';
-import { queryClient } from '@renderer/main';
+import { useQueryClient } from '@tanstack/react-query';
 import { importSchema } from '@shared/schema/importSchema';
 import { ImportData } from '@shared/model';
 
@@ -11,6 +11,7 @@ type Preview = {
 } | null;
 
 export function useDataTransferActions() {
+  const queryClient = useQueryClient();
   const [preview, setPreview] = useState<Preview>(null);
   const [importPreviewOpen, setImportPreviewOpen] = useState(false);
   const [exportLoadingOpen, setExportLoadingOpen] = useState(false);

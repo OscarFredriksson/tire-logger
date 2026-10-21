@@ -33,3 +33,69 @@ body {
 .th-sortable:hover {
   background-color: var(--mantine-color-dark-4);
 }
+
+.application-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.application-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.selected-car-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  max-width: 100%;
+  margin-left: -8px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.selected-car-switch:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.selected-car-switch:focus-visible {
+  outline: 2px solid var(--mantine-color-text);
+  outline-offset: 2px;
+}
+
+.selected-car-switch svg {
+  flex-shrink: 0;
+}
+
+.selected-car-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.car-selection-card {
+  cursor: pointer;
+  text-align: left;
+}
+
+.car-card-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  flex: 1;
+}
+
+.car-selection-card:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.car-selection-card:focus-visible {
+  outline: 2px solid var(--mantine-color-text);
+  outline-offset: 2px;
+}
