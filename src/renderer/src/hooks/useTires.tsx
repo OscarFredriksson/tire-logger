@@ -1,5 +1,5 @@
 import { Tire } from '@shared/model';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useMutation } from './useMutation';
 import { modals } from '@mantine/modals';
@@ -8,7 +8,6 @@ import { routes } from '@renderer/routes';
 import { generatePath, useNavigate } from 'react-router';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { useErrorBoundary } from 'react-error-boundary';
-import { queryClient } from '@renderer/main';
 
 interface UseActiveTiresProps {
   carId?: string;
@@ -22,6 +21,7 @@ interface UseActiveTires {
 }
 
 export const useActiveTires = ({ carId }: UseActiveTiresProps): UseActiveTires => {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { showBoundary } = useErrorBoundary();
 

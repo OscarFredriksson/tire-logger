@@ -8,6 +8,7 @@ const config: Config = {
     '^@renderer/(.*)$': '<rootDir>/src/renderer/src/$1'
   },
   transform: {
+    '^.+\\.js$': ['ts-jest', { tsconfig: { allowJs: true, module: 'CommonJS', target: 'ES2022' } }],
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
@@ -15,6 +16,7 @@ const config: Config = {
       }
     ]
   },
+  transformIgnorePatterns: ['/node_modules/(?!react-error-boundary/)'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node']
 };
 

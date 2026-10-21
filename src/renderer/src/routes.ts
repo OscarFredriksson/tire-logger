@@ -1,4 +1,3 @@
-const CARS = '/cars';
 const CAR = '/car/:carId';
 
 const STINTS = `${CAR}/stints`;
@@ -8,4 +7,4 @@ const TIRE_tireId = `${TIRES}/:tireId`;
 
 const TRACKS = '/tracks';
 
-export const routes = { STINTS, TIRES, TIRE_tireId, TRACKS, CARS };
+export const routes = { STINTS, TIRES, TIRE_tireId, TRACKS };
