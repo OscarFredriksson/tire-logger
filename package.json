@@ -17,6 +17,7 @@
     "typecheck": "yarn typecheck:node && yarn typecheck:web",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
+    "prototype": "vite --config prototype.vite.config.mts",
     "build": "yarn typecheck && yarn test && electron-vite build",
     "postinstall": "node node_modules/electron/install.js && electron-builder install-app-deps",
     "build:unpack": "yarn build && electron-builder --dir",
