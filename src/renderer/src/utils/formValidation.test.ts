@@ -37,6 +37,20 @@ describe('Mantine form validation with Zod 4', () => {
     });
   });
 
+  it.each([false, true])('preserves archive state %s in parsed form values', (archived) => {
+    expect(carSchema.parse({ name: 'Car', archived }).archived).toBe(archived);
+    expect(trackSchema.parse({ name: 'Track', length: 1000, archived }).archived).toBe(archived);
+    expect(tireSchema.parse({ name: 'Tire', allowedLf: true, archived })).toEqual({
+      name: 'Tire',
+      allowedLf: true,
+      allowedRf: false,
+      allowedLr: false,
+      allowedRr: false,
+      archived
+    });
+    expect(stintSchema.parse({ ...stint, archived }).archived).toBe(archived);
+  });
+
   it.each([undefined, '', 'Existing notes'])('accepts optional stint notes: %s', (note) => {
     expect(validateStint({ ...stint, note })).toEqual({});
   });

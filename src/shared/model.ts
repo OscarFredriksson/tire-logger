@@ -1,4 +1,4 @@
-export interface Stint {
+export interface Stint extends ArchivedResource {
   stintId: string;
   trackId: string;
   carId: string;
@@ -15,7 +15,7 @@ export interface TireStint extends Stint {
   position: 'Left Front' | 'Left Rear' | 'Right Front' | 'Right Rear';
 }
 
-export interface Tire {
+export interface Tire extends ArchivedResource {
   tireId: string;
   carId: string;
   name: string;
@@ -29,13 +29,13 @@ export interface Tires {
   tires: Tire[];
 }
 
-export interface Track {
+export interface Track extends ArchivedResource {
   trackId: string;
   name: string;
   length: number;
 }
 
-export interface Car {
+export interface Car extends ArchivedResource {
   carId: string;
   name: string;
 }
@@ -64,4 +64,8 @@ export interface ImportData {
     tires: any[];
     stints: any[];
   };
+}
+
+interface ArchivedResource {
+  archived?: boolean;
 }

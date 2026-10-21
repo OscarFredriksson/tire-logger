@@ -13,7 +13,7 @@ export interface AddTireProps {
 }
 
 export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
-  const { getTire, loading } = useTires({ carId });
+  const { getTire: getActiveTire, loading: loadingActiveTires } = useTires({ carId });
 
   const form = useForm<Partial<Tire>>({
     mode: 'uncontrolled',
@@ -24,8 +24,8 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
   if (!form.initialized) {
     if (!tireId) {
       form.initialize({});
-    } else if (!loading) {
-      const tire = getTire(tireId);
+    } else if (!loadingActiveTires) {
+      const tire = getActiveTire(tireId);
       if (tire) {
         form.initialize(tire);
       } else {
@@ -51,7 +51,7 @@ export const AddTire: FC<AddTireProps> = ({ carId, tireId }) => {
     mutationFn: async () => {
       form.setSubmitting(true);
       const tire = tireSchema.parse(form.getValues());
-      await window.api.putTire({ ...tire, carId, tireId });
+      await window.api.putTire({ ...tire, carId, tireId, archived: tire.archived ?? false });
     },
     onError: () => form.setSubmitting(false)
   });

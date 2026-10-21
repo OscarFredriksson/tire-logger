@@ -11,7 +11,7 @@ import { queryClient } from '@renderer/main';
 
 interface UseMutationProps<TData, TError, TVariables, TContext>
   extends UseMutationOptions<TData, TError, TVariables, TContext> {
-  operationType: 'create' | 'update' | 'delete';
+  operationType: 'create' | 'update' | 'archive';
   entityName: string;
   queryKey?: (string | undefined)[];
 }

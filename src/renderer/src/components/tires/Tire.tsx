@@ -14,12 +14,12 @@ import {
   Title,
   Tooltip
 } from '@mantine/core';
-import { IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconArrowBackUp, IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react';
 import { FC, useMemo, useState } from 'react';
 import { generatePath, useNavigate, useParams } from 'react-router';
 import { routes } from '@renderer/routes';
 import { useTires } from '@renderer/hooks/useTires';
-import { useStints } from '@renderer/hooks/useStints';
+import { useActiveStints } from '@renderer/hooks/useStints';
 import { useTracks } from '@renderer/hooks/useTracks';
 import { formatDistance } from '@renderer/utils/distanceUtils';
 import { TextWithLabel } from '../common/TextWithLabel';
@@ -48,21 +48,23 @@ export const Tire: FC = () => {
   const { carId, tireId } = useParams();
   const navigate = useNavigate();
 
-  const { loading, getTire, deleteTire } = useTires({ carId });
-  const { loading: loadingStints, getTireStints } = useStints({ carId });
-  const { loading: loadingTracks, getTrack } = useTracks();
-
-  const tire = useMemo(() => tireId && getTire(tireId), [getTire, tireId]);
+  const { loading: loadingTires, getTire, archiveTire, restoreTire } = useTires({ carId });
+  const tire = tireId ? getTire(tireId) : undefined;
+  const { loadingActiveStints, getTireStints } = useActiveStints({
+    carId,
+    archived: Boolean(tire?.archived)
+  });
+  const { loading: loadingActiveTracks, getTrack } = useTracks();
 
   const tireStints = useMemo(
-    () => tireId && !loadingStints && getTireStints(tireId),
-    [getTireStints, tireId, loadingStints]
+    () => tireId && !loadingActiveStints && getTireStints(tireId),
+    [getTireStints, tireId, loadingActiveStints]
   );
 
   const enrichedStints = useMemo(
     () =>
       (tireStints &&
-        !loadingTracks &&
+        !loadingActiveTracks &&
         tireStints.map((stint) => {
           const track = getTrack(stint.trackId);
           return {
@@ -72,7 +74,7 @@ export const Tire: FC = () => {
           };
         })) ||
       [],
-    [tireStints, loadingTracks, getTrack]
+    [tireStints, loadingActiveTracks, getTrack]
   );
 
   const [sortBy, setSortBy] = useState<string>();
@@ -98,11 +100,15 @@ export const Tire: FC = () => {
       <Group gap="xl">
         <Button
           leftSection={<IconArrowLeft />}
-          onClick={() => navigate(generatePath(routes.TIRES, { carId }))}
+          onClick={() =>
+            navigate(
+              generatePath(routes.TIRES, { carId }) + (tire?.archived ? '?archived=true' : '')
+            )
+          }
         >
           Back
         </Button>
-        <Title>{loading ? 'Loading Tire' : !tire ? 'Tire not found' : tire.name}</Title>
+        <Title>{loadingTires ? 'Loading Tire' : !tire ? 'Tire not found' : tire.name}</Title>
         {tire && (
           <Group gap="xs">
             <Tooltip label="Edit tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
@@ -114,20 +120,26 @@ export const Tire: FC = () => {
                 <IconEdit size={22} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete tire" withArrow openDelay={themeConstants.TOOLTIP_OPEN_DELAY}>
+            <Tooltip
+              label={tire.archived ? 'Restore tire' : 'Archive tire'}
+              withArrow
+              openDelay={themeConstants.TOOLTIP_OPEN_DELAY}
+            >
               <ActionIcon
                 variant="filled"
-                color="red"
+                color={tire.archived ? undefined : 'red'}
                 size="lg"
-                onClick={() => deleteTire(tire.tireId)}
+                onClick={() =>
+                  tire.archived ? restoreTire(tire.tireId) : archiveTire(tire.tireId)
+                }
               >
-                <IconTrash size={22} />
+                {tire.archived ? <IconArrowBackUp size={22} /> : <IconTrash size={22} />}
               </ActionIcon>
             </Tooltip>
           </Group>
         )}
       </Group>
-      {loading ? (
+      {loadingTires ? (
         <Center className="mt-5">
           <Loader />
         </Center>
@@ -173,7 +185,7 @@ export const Tire: FC = () => {
                 </Text>
               </TextWithLabel>
               <TextWithLabel label="Total distance:">
-                {tireStints && !loadingTracks ? (
+                {tireStints && !loadingActiveTracks ? (
                   formatDistance(
                     tireStints.reduce(
                       (total, { trackId, laps }) => total + laps * (getTrack(trackId)?.length || 0),
@@ -185,7 +197,7 @@ export const Tire: FC = () => {
                 )}
               </TextWithLabel>
               <TextWithLabel label="Used at:">
-                {tireStints && !loadingTracks ? (
+                {tireStints && !loadingActiveTracks ? (
                   <Text>
                     {tireStints
                       .map(({ trackId }) => getTrack(trackId)?.name)
@@ -259,12 +271,16 @@ export const Tire: FC = () => {
                 </Table.Thead>
                 <Table.Tbody>
                   {(sortedStints || enrichedStints).map(
-                    ({ stintId, trackName, distance, date, laps, position, note }) => (
+                    ({ stintId, trackName, distance, date, laps, position, note, archived }) => (
                       <Table.Tr
                         key={stintId}
                         className="cursor-pointer"
                         onClick={() =>
-                          navigate(generatePath(routes.STINTS, { carId }) + '?stintId=' + stintId)
+                          navigate(
+                            generatePath(routes.STINTS, { carId }) +
+                              '?' +
+                              new URLSearchParams({ stintId, archived: String(Boolean(archived)) })
+                          )
                         }
                       >
                         <Table.Td>{formatDate(date)}</Table.Td>

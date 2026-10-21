@@ -17,7 +17,7 @@ interface TrackForm {
 }
 
 export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
-  const { getTrack, loading } = useTracks();
+  const { getTrack, loading: loadingActiveTracks } = useTracks();
 
   const form = useForm<TrackForm>({
     mode: 'uncontrolled',
@@ -28,7 +28,7 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
   if (!form.initialized) {
     if (!trackId) {
       form.initialize({});
-    } else if (!loading) {
+    } else if (!loadingActiveTracks) {
       const track = getTrack(trackId);
       if (track) {
         form.initialize(track);
@@ -45,7 +45,7 @@ export const AddTrack: FC<AddTrackProps> = ({ trackId }) => {
     mutationFn: async () => {
       form.setSubmitting(true);
       const track = trackSchema.parse(form.getValues());
-      await window.api.putTrack({ ...track, trackId });
+      await window.api.putTrack({ ...track, trackId, archived: track.archived ?? false });
     },
     onError: () => form.setSubmitting(false)
   });

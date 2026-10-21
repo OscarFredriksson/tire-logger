@@ -15,7 +15,7 @@ interface CarForm {
 }
 
 export const AddCar: FC<AddCarProps> = ({ carId }) => {
-  const { loading, getCar } = useCars();
+  const { loading: loadingActiveCars, getCar } = useCars();
 
   const form = useForm<CarForm>({
     mode: 'uncontrolled',
@@ -26,7 +26,7 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
   if (!form.initialized) {
     if (!carId) {
       form.initialize({});
-    } else if (!loading) {
+    } else if (!loadingActiveCars) {
       const car = getCar(carId);
       if (car) {
         form.initialize(car);
@@ -43,7 +43,7 @@ export const AddCar: FC<AddCarProps> = ({ carId }) => {
     mutationFn: async () => {
       form.setSubmitting(true);
       const car = carSchema.parse(form.getValues());
-      await window.api.putCar({ ...car, carId });
+      await window.api.putCar({ ...car, carId, archived: car.archived ?? false });
     },
     onError: () => form.setSubmitting(false)
   });

@@ -1,11 +1,10 @@
 import { Group, Select, Tabs, Title, Tooltip } from '@mantine/core';
-import { useCars } from '@renderer/hooks/useCars';
+import { useActiveCar } from '@renderer/hooks/useCars';
 import { queryClient } from '@renderer/main';
 import { routes } from '@renderer/routes';
-import { FC, PropsWithChildren, useState } from 'react';
-import { generatePath, useLocation, useNavigate } from 'react-router';
-import { ImportButton } from './import-export/ImportButton';
-import { ExportButton } from './import-export/ExportButton';
+import { FC, PropsWithChildren, useEffect, useState } from 'react';
+import { generatePath, matchPath, useLocation, useNavigate } from 'react-router';
+import { DataActionsMenu } from './import-export/ImportExportMenu';
 
 const findActiveTab = (pathname: string, carId?: string): string | undefined => {
   if (carId && pathname.includes('/stints')) return generatePath(routes.STINTS, { carId });
@@ -35,16 +34,27 @@ const HeaderTab: FC<PropsWithChildren<HeaderTabProps>> = ({
 );
 
 export const Header: FC = () => {
-  const { cars } = useCars();
+  const { activeCars } = useActiveCar();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const [selectedCar, setSelectedCar] = useState<string | undefined>();
+  const [preferredCar, setSelectedCar] = useState<string | undefined>();
+  const routeCarId = matchPath('/car/:carId/*', pathname)?.params.carId;
+  const selectedCar =
+    activeCars?.find((car) => car.carId === (routeCarId ?? preferredCar))?.carId ??
+    activeCars?.[0]?.carId;
 
   const activeTab = findActiveTab(pathname, selectedCar);
 
-  if (!selectedCar && cars && cars.length > 0) {
-    setSelectedCar(cars[0].carId);
-  }
+  useEffect(() => {
+    if (!activeCars || !routeCarId || activeCars.some((car) => car.carId === routeCarId)) return;
+
+    const destination = selectedCar
+      ? generatePath(pathname.includes('/tires') ? routes.TIRES : routes.STINTS, {
+          carId: selectedCar
+        })
+      : routes.CARS;
+    navigate(destination, { replace: true });
+  }, [activeCars, routeCarId, selectedCar, pathname, navigate]);
 
   const onSelectCar = (carId: string | null) => {
     if (carId) {
@@ -76,13 +86,12 @@ export const Header: FC = () => {
         <HeaderTab route={routes.TRACKS}>Tracks</HeaderTab>
         <HeaderTab route={routes.CARS}>Cars</HeaderTab>
         <Group ml="auto" m="md" justify="end" gap="md">
-          <ImportButton />
-          <ExportButton />
+          <DataActionsMenu />
           <Select
-            value={selectedCar}
+            value={selectedCar ?? null}
             onChange={onSelectCar}
             placeholder="Select a car..."
-            data={cars?.map(({ carId, name }) => ({
+            data={activeCars?.map(({ carId, name }) => ({
               value: carId,
               label: name
             }))}

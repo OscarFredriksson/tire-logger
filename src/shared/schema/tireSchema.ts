@@ -6,7 +6,8 @@ export const tireSchema = z
     allowedLf: z.coerce.boolean().default(false),
     allowedRf: z.coerce.boolean().default(false),
     allowedLr: z.coerce.boolean().default(false),
-    allowedRr: z.coerce.boolean().default(false)
+    allowedRr: z.coerce.boolean().default(false),
+    archived: z.coerce.boolean().optional()
   })
   .refine((data) => data.allowedLf || data.allowedRf || data.allowedLr || data.allowedRr, {
     message: 'At least one tire position must be selected',

@@ -33,7 +33,7 @@ export interface StintProps {
 export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
   const { tracks } = useTracks();
   const { tires } = useTires({ carId });
-  const { getStint, loading: loadingStints } = useStints({ carId });
+  const { getStint, loading: loadingActiveStints } = useStints({ carId });
 
   const form = useForm<Partial<Stint>>({
     mode: 'uncontrolled',
@@ -44,7 +44,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
   if (!form.initialized) {
     if (!stintId) {
       form.initialize({ carId, date: new Date() });
-    } else if (!loadingStints) {
+    } else if (!loadingActiveStints) {
       const stint = getStint(stintId);
       if (stint) {
         form.initialize(stint);
@@ -64,60 +64,64 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     return { value: formatDistance(track.length * laps) };
   };
 
-  const { leftFront, rightFront, leftRear, rightRear } = form.getValues();
+  const { leftFront, rightFront, leftRear, rightRear, trackId } = form.getValues();
+  const activeTracks = tracks?.filter((track) => !track.archived || track.trackId === trackId);
+  const activeTires = tires?.filter(
+    (tire) => !tire.archived || [leftFront, rightFront, leftRear, rightRear].includes(tire.tireId)
+  );
 
   const tireSelections = useMemo(
     () =>
-      tires
+      activeTires
         ?.map(({ tireId, name }) => ({ value: tireId, label: name }))
         .filter(({ value }) =>
           [leftFront, rightFront, leftRear, rightRear].every((tire) => tire !== value)
         ),
-    [tires, leftFront, rightFront, leftRear, rightRear]
+    [activeTires, leftFront, rightFront, leftRear, rightRear]
   );
 
   const allowedLfTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedLf }) =>
             allowedLf && [rightFront, leftRear, rightRear].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [rightFront, leftRear, rightRear, tires]
+    [rightFront, leftRear, rightRear, activeTires]
   );
 
   const allowedRfTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedRf }) =>
             allowedRf && [leftFront, leftRear, rightRear].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [leftFront, leftRear, rightRear, tires]
+    [leftFront, leftRear, rightRear, activeTires]
   );
 
   const allowedLrTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedLr }) =>
             allowedLr && [leftFront, rightFront, rightRear].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [leftFront, rightFront, rightRear, tires]
+    [leftFront, rightFront, rightRear, activeTires]
   );
 
   const allowedRrTires = useMemo(
     () =>
-      tires
+      activeTires
         ?.filter(
           ({ tireId, allowedRr }) =>
             allowedRr && [leftFront, leftRear, rightFront].every((tire) => tire !== tireId)
         )
         .map(({ tireId, name }) => ({ value: tireId, label: name })),
-    [leftFront, leftRear, rightFront, tires]
+    [leftFront, leftRear, rightFront, activeTires]
   );
 
   const { mutate: save } = useMutation({
@@ -127,7 +131,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     mutationFn: async () => {
       form.setSubmitting(true);
       const stint = stintSchema.parse(form.getValues());
-      await window.api.putStint({ ...stint, stintId });
+      await window.api.putStint({ ...stint, stintId, archived: stint.archived ?? false });
     },
     onError: () => form.setSubmitting(false)
   });
@@ -136,7 +140,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
     <form onSubmit={form.onSubmit(() => save())}>
       <Title>{stintId ? 'Edit Stint' : 'New Stint'}</Title>
       <LoadingOverlay visible={!form.initialized || form.submitting} />
-      {!tracks || !tireSelections ? (
+      {!activeTracks || !tireSelections ? (
         <Loader />
       ) : (
         <Stack className="mt-5">
@@ -157,7 +161,7 @@ export const AddStint: FC<StintProps> = ({ carId, stintId }) => {
             label="Track"
             placeholder="Select track"
             allowDeselect={false}
-            data={tracks.map(({ trackId, name }) => ({ value: trackId, label: name }))}
+            data={activeTracks.map(({ trackId, name }) => ({ value: trackId, label: name }))}
             {...form.getInputProps('trackId')}
             searchable
           />
